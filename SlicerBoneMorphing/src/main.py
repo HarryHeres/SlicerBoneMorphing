@@ -1,2 +1,0 @@
-from .widget.SlicerBoneMorphingWidget import SlicerBoneMorphingWidget
-from .logic.SlicerBoneMorphingLogic import SlicerBoneMorphingLogic  
