@@ -13,6 +13,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     """Called when the application opens the module the first time and the widget is initialized."""
     ScriptedLoadableModuleWidget.__init__(self, parent)
 
+
   def setup(self):
     """Called when the application opens the module the first time and the widget is initialized."""
     ScriptedLoadableModuleWidget.setup(self)
@@ -21,5 +22,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.uiWidget = slicer.util.loadUI(self.resourcePath("UI/SlicerBoneMorphing.ui"))
     self.layout.addWidget(self.uiWidget)
     self.ui = slicer.util.childWidgetVariables(self.uiWidget)
-
     self.logic = SlicerBoneMorphingLogic()
+
+    self.ui.inputNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
+    self.ui.foundationNodeSelectionBox.setMRMLScene(slicer.mrmlScene)

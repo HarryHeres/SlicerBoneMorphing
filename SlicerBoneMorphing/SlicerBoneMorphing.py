@@ -9,12 +9,12 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "Slicer Bone Mesh Morphing Module" 
-    self.parent.categories = ["Examples"] # TODO: Change to an appropriate category
+    self.parent.categories = [""] # TODO: Change to an appropriate category
     self.parent.dependencies = []
     self.parent.contributors = ["Jan Heres (University of West Bohemia), Eva C. Herbst (ETH Zurich), Arthur Porto (Louisiana State University)"] 
     self.parent.helpText = """
         This module gives a user ability to recreate bone mesh models based on their partial scan.
-        Please, start with importing your model in checking out the options on the left side.  
+        Please, start with importing your model and checking out the options on the left side afterwards.  
     """
     self.parent.acknowledgementText = """
         Credits: Jan Heres
