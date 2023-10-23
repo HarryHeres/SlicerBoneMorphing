@@ -1,4 +1,4 @@
-from slicer.ScriptedLoadableModule import ScriptedLoadableModuleLogic, ScriptedLoadableModuleWidget
+from slicer.ScriptedLoadableModule import ScriptedLoadableModuleLogic
 import slicer
 
 try:
@@ -12,6 +12,8 @@ import ctypes
 import os
 import glob
 from vtk.util.numpy_support import vtk_to_numpy
+
+import tempfile
 
 from .Constants import *
 
@@ -33,7 +35,9 @@ RADIUS_NORMAL_SCALING = 4
 RADIUS_FEATURE_SCALING = 10 
 MAX_NN_NORMALS = 30
 MAX_NN_FPFH = 100
-VOXEL_SIZE_SCALING = 55
+VOXEL_SIZE_SCALING = 55 
+
+deformed = None
 
 
 class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
@@ -56,11 +60,10 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         numpy_vertices = vtk_to_numpy(vtk_polydata.GetPoints().GetData())
 
         # Get normals if present
-        if vtk_polydata.GetPointData().HasNormals():
+        numpy_normals = None
+        model_normals = vtk_polydata.GetPointData().GetNormals()
+        if(model_normals is not None):
             numpy_normals = vtk_to_numpy(vtk_polydata.GetPointData().GetNormals())
-        else:
-            numpy_normals = None
-
 
         # Get indices (triangles), this would be a (n, 3) shape numpy array where n is the number of triangles.
         # If the vtkPolyData does not represent a valid triangle mesh, the indices may not form valid triangles.
@@ -89,30 +92,30 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         source_pcd = self.convert_to_point_cloud(source_mesh)
         target_pcd = self.convert_to_point_cloud(target_mesh)
+
+        print(source_pcd)
         
         #Calculate object size
         size = np.linalg.norm(np.asarray(target_pcd.get_max_bound()) - np.asarray(target_pcd.get_min_bound()))
-        voxel_size = float(size / VOXEL_SIZE_SCALING)
+        voxel_size = float(size / VOXEL_SIZE_SCALING) # the 55 value seems to be too much downscaling
         
         source_pcd_downsampled, source_pcd_fpfh = self.preprocess_point_cloud(source_pcd, voxel_size)
         target_pcd_downsampled, target_pcd_fpfh = self.preprocess_point_cloud(target_pcd, voxel_size)
+
+        print(source_pcd_downsampled)
         
         # Global registration
-        max_attempts = 20
-        result_ransac = self.ransac_pcd_registration(source_pcd_downsampled, 
-                                                             target_pcd_downsampled,
-                                                             source_pcd_fpfh,
-                                                             target_pcd_fpfh,
-                                                             voxel_size, 
-                                                             max_attempts)
-        if(result_ransac == None):
-            print("No ideal fit was found using the RANSAC algorithm. Cancelling further operations...")
+        try:
+            max_attempts = 20
+            result_ransac = self.ransac_pcd_registration(source_pcd_downsampled, target_pcd_downsampled,source_pcd_fpfh,target_pcd_fpfh,voxel_size, max_attempts)
+        except RuntimeError:
+            print("No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
             return EXIT_OK 
 
         result_icp = self.refine_registration(source_pcd, target_pcd, result_ransac, voxel_size)
         
         # Deformable registration
-        deformed = self.deformable_registration(source_mesh.transform(result_icp.transformation), target_mesh)
+        deformed = self.deformable_registration(source_mesh.transform(result_icp.transformation), target_mesh) 
         deformed.compute_vertex_normals()
         target_mesh.compute_vertex_normals()
 
@@ -152,7 +155,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
           Tuple: [Downsampled PCD: open3d.geometry.PointCloud,
                   FPFH: open3d.pipelines.registration.Feature]
       '''
-      # NOTE: JH - pull these constants out 
 
       radius_normal = voxel_size * RADIUS_NORMAL_SCALING
       radius_feature = voxel_size * RADIUS_FEATURE_SCALING
@@ -222,8 +224,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
     def refine_registration(self, source_pcd_down: o3d.geometry.PointCloud, 
                           target_pcd_down: o3d.geometry.PointCloud, 
-                          # source_fpfh: o3d.pipelines.registration.Feature, 
-                          # target_fpfh: o3d.pipelines.registration.Feature,
                           ransac_result: o3d.pipelines.registration.RegistrationResult,
                           voxel_size: float):
       ''' Perform a point-clouds' registration refinement.
@@ -239,6 +239,11 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
       '''
       distance_threshold = voxel_size * 0.4
+
+      # NOTE: Why does it need to be estimated again? 
+      source_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
+      target_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
+
       print(":: Point-to-plane ICP registration is applied on original point")
       print("   clouds to refine the alignment. This time we use a strict")
       print("   distance threshold %.3f." % distance_threshold)
@@ -251,39 +256,44 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
       return result
 
     def deformable_registration(self, source_pcd, target_pcd):
-      sourceArray = np.asarray(source_pcd.vertices,dtype=np.float32)
-      targetArray = np.asarray(target_pcd.vertices,dtype=np.float32)
-      targetPath = './target.txt'
-      sourcePath = './source.txt'
-      np.savetxt (targetPath, targetArray, delimiter=',')
-      np.savetxt (sourcePath, sourceArray, delimiter=',')
 
-      cmd = f'bcdp -x {targetPath} -y {sourcePath} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1'
+        source_array = np.asarray(source_pcd.vertices,dtype=np.float32)
+        target_array = np.asarray(target_pcd.vertices,dtype=np.float32)
+        target_path = tempfile.gettempdir() + '/slicer_bone_morphing_target.txt'
+        source_path = tempfile.gettempdir() + '/slicer_bone_morphing_source.txt'
+        output_path = tempfile.gettempdir() + '/output_'
+        np.savetxt (target_path, target_array, delimiter=',')
+        np.savetxt (source_path, source_array, delimiter=',')
 
-      # Split the cmd string into individual arguments
-      cmd_parts = cmd.split()
 
-      # Convert the Python list of arguments to a C-style array of char pointers
-      argv_c = (ctypes.c_char_p * len(cmd_parts))()
-      argv_c[:] = [arg.encode('utf-8') for arg in cmd_parts]
+        cmd = f'bcdp -x {target_path} -y {source_path} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1 -o {output_path}'
 
-      # Set argc to the number of arguments
-      argc = len(cmd_parts)
+        # Split the cmd string into individual arguments
+        cmd_parts = cmd.split()
 
-      BCPD.main.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_char_p))
+        # Convert the Python list of arguments to a C-style array of char pointers
+        argv_c = (ctypes.c_char_p * len(cmd_parts))()
+        argv_c[:] = [arg.encode('utf-8') for arg in cmd_parts]
 
-      # TODO: JH - Better usage, rather than the main method
-      # Might be considered in the future, but this should be enough, for now
-      BCPD.main(argc, argv_c)
+        # Set argc to the number of arguments
+        argc = len(cmd_parts)
 
-      bcpd_result = np.loadtxt('output_y.interpolated.txt')
+        BCPD.main.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_char_p))
 
-      for fl in glob.glob("output*.txt"):
-          os.remove(fl)
-      os.remove(targetPath)
-      os.remove(sourcePath)
+        # TODO: JH - Better usage, rather than the main method
+        # Might be considered in the future, but this should be enough, for now
+        BCPD.main(argc, argv_c)
 
-      deformed = o3d.geometry.TriangleMesh()
-      deformed.vertices = o3d.utility.Vector3dVector(np.asarray(bcpd_result))
-      deformed.triangles = source_pcd.triangles
-      return deformed
+        bcpd_result = np.loadtxt(output_path + "y.interpolated.txt")
+
+        for fl in glob.glob(output_path + "*.txt"):
+            os.remove(fl)
+
+        os.remove(target_path)
+        os.remove(source_path)
+
+        deformed = o3d.geometry.TriangleMesh()
+        deformed.vertices = o3d.utility.Vector3dVector(np.asarray(bcpd_result))
+        deformed.triangles = source_pcd.triangles
+
+        return deformed
