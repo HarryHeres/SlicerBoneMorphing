@@ -22,7 +22,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.uiWidget = slicer.util.loadUI(self.resourcePath("UI/SlicerBoneMorphing.ui"))
     self.layout.addWidget(self.uiWidget)
     self.ui = slicer.util.childWidgetVariables(self.uiWidget)
-    self.logic = SlicerBoneMorphingLogic()
+    self.logic = SlicerBoneMorphingLogic(self)
 
     self.ui.inputNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
     self.ui.foundationNodeSelectionBox.setMRMLScene(slicer.mrmlScene)

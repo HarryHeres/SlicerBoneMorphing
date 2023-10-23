@@ -8,7 +8,7 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "Bone Mesh Morphing" 
+    self.parent.title = "Slicer Bone Morphing" 
     self.parent.categories = [""] # TODO: Change to an appropriate category
     self.parent.dependencies = []
     self.parent.contributors = ["Jan Heres (University of West Bohemia), Eva C. Herbst (ETH Zurich), Arthur Porto (Louisiana State University)"] 

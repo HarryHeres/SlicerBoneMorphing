@@ -1,21 +1,30 @@
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleLogic
-import open3d as o3d
+import slicer
+
+try:
+    import open3d as o3d
+except ModuleNotFoundError:
+    print("Module Open3D not installed. Trying to install...")
+    slicer.util.pip_install('open3d')
+    
 import numpy as np
 import ctypes
 import os
 import glob
 
-bcpd_lib = None
+bcpd_lib = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/"
 
 from sys import platform
-if platform == "linux" or platform == "linux2":
-    bcpd_lib = "../Resources/BCPD/libbcpd.so"
-elif platform == "darwin":
-    bcpd_lib = "../Resources/BCPD/libbcpd_macos_arm.dylib"
-elif platform == "win32":
-    bcpd_lib = "../Resources/BCPD/libbcpd.dll"
 
-BCPD = ctypes.CDLL()
+#NOTE: Needs relative path to the main module script
+if platform == "linux" or platform == "linux2":
+    bcpd_lib += "libbcpd_linux_x86_64.so"
+elif platform == "darwin":
+    bcpd_lib += "libbcpd_macos_x86_64.dylib" # Slicer is running through Rosetta, so x86 version needs to be used for now
+elif platform == "win32":
+    bcpd_lib += "libbcpd.dll"
+
+BCPD = ctypes.CDLL(bcpd_lib)
 
 RADIUS_NORMAL_SCALING = 4
 RADIUS_FEATURE_SCALING = 10 
@@ -24,7 +33,7 @@ MAX_NN_FPFH = 100
 
 
 class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
-  """This class should implement all the actual
+    """This class should implement all the actual
   computation done by your module.  The interface
   should be such that other python code can import
   this class and make use of the functionality without
@@ -33,9 +42,12 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
 
+    def __init__(self, parent):
+        ScriptedLoadableModuleLogic.__init__(self, parent)
 
-  @staticmethod
-  def preprocess_point_cloud(pcd: o3d.geometry.PointCloud, voxel_size: float): 
+
+    @staticmethod
+    def preprocess_point_cloud(pcd: o3d.geometry.PointCloud, voxel_size: float): 
       ''' 
           Perform downsampling of a mesh, normal estimation and computing FPFH feature of the point cloud.
 
@@ -60,8 +72,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
       return pcd_down, pcd_fpfh
 
-  @staticmethod
-  def ransac_pcd_registration(source_pcd_down: o3d.geometry.PointCloud, 
+    @staticmethod
+    def ransac_pcd_registration(source_pcd_down: o3d.geometry.PointCloud, 
                               target_pcd_down: o3d.geometry.PointCloud, 
                               source_fpfh: o3d.pipelines.registration.Feature, 
                               target_fpfh: o3d.pipelines.registration.Feature,
@@ -112,8 +124,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
           count += 1
       return best_result
 
-  @staticmethod
-  def refine_registration(source_pcd_down: o3d.geometry.PointCloud, 
+    @staticmethod
+    def refine_registration(source_pcd_down: o3d.geometry.PointCloud, 
                           target_pcd_down: o3d.geometry.PointCloud, 
                           # source_fpfh: o3d.pipelines.registration.Feature, 
                           # target_fpfh: o3d.pipelines.registration.Feature,
@@ -143,8 +155,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
           o3d.pipelines.registration.TransformationEstimationPointToPlane())
       return result
 
-  @staticmethod
-  def deformable_registration(source_pcd, target_pcd):
+    @staticmethod
+    def deformable_registration(source_pcd, target_pcd):
       sourceArray = np.asarray(source_pcd.vertices,dtype=np.float32)
       targetArray = np.asarray(target_pcd.vertices,dtype=np.float32)
       targetPath = './target.txt'
