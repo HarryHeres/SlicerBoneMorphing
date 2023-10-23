@@ -1,0 +1,2 @@
+EXIT_OK = 0
+EXIT_NOK = 1

@@ -24,5 +24,10 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.ui = slicer.util.childWidgetVariables(self.uiWidget)
     self.logic = SlicerBoneMorphingLogic(self)
 
-    self.ui.inputNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
-    self.ui.foundationNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
+    self.ui.sourceNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
+    self.ui.targetNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
+    self.ui.generateModelButton.clicked.connect(self.generate_model)
+
+  def generate_model(self):
+      self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode())
+        
