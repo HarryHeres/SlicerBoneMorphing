@@ -1,3 +1,4 @@
+from src.logic.Constants import EXIT_OK
 import ctk
 import slicer
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleWidget
@@ -29,5 +30,13 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.ui.generateModelButton.clicked.connect(self.generate_model)
 
   def generate_model(self):
-      self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode())
+      code, vtk_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode())
+
+      if(code == EXIT_OK):
+        model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'TEST')
+        model_node.SetAndObservePolyData(vtk_polydata)
+        model_node.CreateDefaultDisplayNodes()  # Optional
+
+
+            
         

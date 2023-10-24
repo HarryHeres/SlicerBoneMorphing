@@ -1,8 +1,10 @@
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleLogic
 import slicer
+from slicer import vtkMRMLModelNode
 
 try:
     import open3d as o3d
+    from o3d.open3d_to_vtk import open3d_to_vtk
 except ModuleNotFoundError:
     print("Module Open3D not installed. Trying to install...")
     slicer.util.pip_install('open3d')
@@ -29,6 +31,7 @@ elif platform == "darwin":
 elif platform == "win32":
     bcpd_lib += "libbcpd.dll"
 
+
 BCPD = ctypes.CDLL(bcpd_lib)
 
 RADIUS_NORMAL_SCALING = 4
@@ -36,6 +39,10 @@ RADIUS_FEATURE_SCALING = 10
 MAX_NN_NORMALS = 30
 MAX_NN_FPFH = 100
 VOXEL_SIZE_SCALING = 55 
+CLUSTERING_VOXEL_SCALING = 3
+SMOOTHING_ITERATIONS = 2
+FILTERING_ITEARTIONS = 100
+
 
 deformed = None
 
@@ -54,6 +61,17 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
     def convert_model_to_mesh(self, model): 
+        """
+            Convert vtkMRMLModelNode to open3d.geometry.TriangleMesh
+
+            Parameters
+            ----------
+            vtkMRMLNode model - model to be converted
+
+            Returns
+            -------
+            open3d.geometry.TriangleMesh Same model, new representation
+        """
         vtk_polydata = model.GetPolyData()
 
         # Get vertices from vtk_polydata
@@ -80,12 +98,28 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         return open3d_mesh
     
 
-    def generate_model(self, source_model, target_model):
+    def generate_model(self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode): 
+        """
+            Generates new model based on the BCPD algorithm fit between source and target models. 
+
+            Parameters
+            ----------
+            vtkMRMLModelNode source_model - source (partial) model to be fit-generated
+            vtkMRMLModelNode target_model - model to fit the partial source by. 
+
+            Returns
+            -------
+            Tuple[int status, vtkPolyData model data]:
+                - status: EXIT_OK or EXIT_FAILURE
+                - model: representing the new generated model 
+
+        """
+
         NODE_NOT_SELECTED = 0 # Via Slicer documentation
 
         if(source_model == NODE_NOT_SELECTED or target_model == NODE_NOT_SELECTED):
             print("Input or foundation model(s) were not selected")
-            return
+            return [EXIT_NOK, None]
 
         source_mesh = self.convert_model_to_mesh(source_model)        
         target_mesh = self.convert_model_to_mesh(target_model)
@@ -110,7 +144,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             result_ransac = self.ransac_pcd_registration(source_pcd_downsampled, target_pcd_downsampled,source_pcd_fpfh,target_pcd_fpfh,voxel_size, max_attempts)
         except RuntimeError:
             print("No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
-            return EXIT_OK 
+            return [EXIT_NOK, None]
 
         result_icp = self.refine_registration(source_pcd, target_pcd, result_ransac, voxel_size)
         
@@ -124,19 +158,19 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         combined.compute_vertex_normals()
 
         # Simplify mesh (smoothing and filtering)
-        mesh_smp = combined.simplify_vertex_clustering(voxel_size/3, contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_smp = mesh_smp.filter_smooth_simple(number_of_iterations=2)
-        mesh_smp = mesh_smp.filter_smooth_taubin(number_of_iterations=100)
-        mesh_smp.compute_vertex_normals()
+        mesh_smp = combined.simplify_vertex_clustering(voxel_size/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
+        mesh_smp = mesh_smp.filter_smooth_simple(number_of_iterations=SMOOTHING_ITERATIONS)
+        mesh_smp = mesh_smp.filter_smooth_taubin(number_of_iterations=FILTERING_ITEARTIONS)
+        # mesh_smp.compute_vertex_normals() # TODO: Is this needed? 
 
-        return mesh_smp
+        return [EXIT_OK, open3d_to_vtk(mesh_smp)]
 
         
     def convert_to_point_cloud(self, mesh: o3d.geometry.TriangleMesh):
         ''' Converts a mesh to a open3d.geometry.PointCloud'''
 
-        mesh_center = mesh.get_center()
-        mesh.translate(-mesh_center, relative=False)
+        # mesh_center = mesh.get_center()
+        # mesh.translate(-mesh_center, relative=False) # Not needed for Slicer
         pcd = o3d.geometry.PointCloud()
         pcd.points = mesh.vertices
         pcd.colors = mesh.vertex_colors
