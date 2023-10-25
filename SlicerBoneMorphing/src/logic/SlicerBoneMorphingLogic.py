@@ -4,35 +4,31 @@ from slicer import vtkMRMLModelNode
 
 try:
     import open3d as o3d
-    from o3d.open3d_to_vtk import open3d_to_vtk
 except ModuleNotFoundError:
-    print("Module Open3D not installed. Trying to install...")
+    print("Module Open3D is not installed. Installing...")
     slicer.util.pip_install('open3d')
-    
+
 import numpy as np
-import ctypes
 import os
 import glob
+import vtk
 from vtk.util.numpy_support import vtk_to_numpy
-
+import subprocess
 import tempfile
 
 from .Constants import *
 
-bcpd_lib = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/"
+BCPD_EXEC = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/exec/"
 
 from sys import platform
 
 #NOTE: Needs relative path to the main module script
 if platform == "linux" or platform == "linux2":
-    bcpd_lib += "libbcpd_linux_x86_64.so"
+    BCPD_EXEC += "bcpd_linux_x86_64"
 elif platform == "darwin":
-    bcpd_lib += "libbcpd_macos_x86_64.dylib" # Slicer is running through Rosetta, so x86 version needs to be used for now
+    BCPD_EXEC += "bcpd_macos_x86_64" # Slicer is running through Rosetta, so x86 version needs to be used for now
 elif platform == "win32":
-    bcpd_lib += "libbcpd.dll"
-
-
-BCPD = ctypes.CDLL(bcpd_lib)
+    BCPD_EXEC += "bcpd_win32.exe"
 
 RADIUS_NORMAL_SCALING = 4
 RADIUS_FEATURE_SCALING = 10 
@@ -60,17 +56,52 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __init__(self, parent):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
-    def convert_model_to_mesh(self, model): 
+    def convert_mesh_to_vtk_polydata(self, mesh: o3d.geometry.TriangleMesh):
+        """
+            Convert o3d.geometry.TriangleMesh to vtkPolyData
+
+            Parameters
+            ----------
+            o3d.geometry.TriangleMesh mesh - mesh to be converted
+
+            Returns
+            -------
+            vtk.vtkPolyData
+        """
+        # Step 2: get the vertices and triangles (faces)
+        vertices = np.asarray(mesh.vertices)
+        triangles = np.asarray(mesh.triangles)
+
+        # Step 3: create the vtkPoints objects and insert the vertices
+        points = vtk.vtkPoints()
+
+        for v in vertices:
+            points.InsertNextPoint(v)
+
+        # Step 4: create the vtkCellArray object and insert the triangles
+        polys = vtk.vtkCellArray()
+
+        for t in triangles:
+            polys.InsertNextCell(3, t)
+
+        # Step 5: create the vtkPolyData object and insert the points and polygons
+        vtkPolyData = vtk.vtkPolyData()
+        vtkPolyData.SetPoints(points)
+        vtkPolyData.SetPolys(polys)
+
+        return vtkPolyData
+        
+    def convert_model_to_mesh(self, model: vtkMRMLModelNode): 
         """
             Convert vtkMRMLModelNode to open3d.geometry.TriangleMesh
 
             Parameters
             ----------
-            vtkMRMLNode model - model to be converted
+            slicer.vtkMRMLNode model - model to be converted
 
             Returns
             -------
-            open3d.geometry.TriangleMesh Same model, new representation
+            open3d.geometry.TriangleMesh 
         """
         vtk_polydata = model.GetPolyData()
 
@@ -119,7 +150,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         if(source_model == NODE_NOT_SELECTED or target_model == NODE_NOT_SELECTED):
             print("Input or foundation model(s) were not selected")
-            return [EXIT_NOK, None]
+            return EXIT_FAILURE
 
         source_mesh = self.convert_model_to_mesh(source_model)        
         target_mesh = self.convert_model_to_mesh(target_model)
@@ -144,12 +175,14 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             result_ransac = self.ransac_pcd_registration(source_pcd_downsampled, target_pcd_downsampled,source_pcd_fpfh,target_pcd_fpfh,voxel_size, max_attempts)
         except RuntimeError:
             print("No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
-            return [EXIT_NOK, None]
+            return EXIT_FAILURE 
 
         result_icp = self.refine_registration(source_pcd, target_pcd, result_ransac, voxel_size)
         
         # Deformable registration
         deformed = self.deformable_registration(source_mesh.transform(result_icp.transformation), target_mesh) 
+        if(deformed == None):
+            return EXIT_FAILURE
         deformed.compute_vertex_normals()
         target_mesh.compute_vertex_normals()
 
@@ -163,11 +196,23 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         mesh_smp = mesh_smp.filter_smooth_taubin(number_of_iterations=FILTERING_ITEARTIONS)
         # mesh_smp.compute_vertex_normals() # TODO: Is this needed? 
 
-        return [EXIT_OK, open3d_to_vtk(mesh_smp)]
+        vtkPolyData = self.convert_mesh_to_vtk_polydata(mesh_smp)
+        
+        return [EXIT_OK, vtkPolyData]
 
         
     def convert_to_point_cloud(self, mesh: o3d.geometry.TriangleMesh):
-        ''' Converts a mesh to a open3d.geometry.PointCloud'''
+        """
+            Convert o3d.geometry.TriangleMesh to o3d.geometry.PointCloud
+
+            Parameters
+            ----------
+            o3d.geometry.TriangleMesh mesh - mesh to be converted
+
+            Returns
+            -------
+            o3d.geometry.PointCloud
+        """
 
         # mesh_center = mesh.get_center()
         # mesh.translate(-mesh_center, relative=False) # Not needed for Slicer
@@ -290,39 +335,28 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
       return result
 
     def deformable_registration(self, source_pcd, target_pcd):
-
         source_array = np.asarray(source_pcd.vertices,dtype=np.float32)
         target_array = np.asarray(target_pcd.vertices,dtype=np.float32)
+
         target_path = tempfile.gettempdir() + '/slicer_bone_morphing_target.txt'
         source_path = tempfile.gettempdir() + '/slicer_bone_morphing_source.txt'
         output_path = tempfile.gettempdir() + '/output_'
+
         np.savetxt (target_path, target_array, delimiter=',')
         np.savetxt (source_path, source_array, delimiter=',')
 
+        cmd = f'{BCPD_EXEC} -x {target_path} -y {source_path} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1 -o {output_path}'
 
-        cmd = f'bcdp -x {target_path} -y {source_path} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1 -o {output_path}'
+        subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
 
-        # Split the cmd string into individual arguments
-        cmd_parts = cmd.split()
-
-        # Convert the Python list of arguments to a C-style array of char pointers
-        argv_c = (ctypes.c_char_p * len(cmd_parts))()
-        argv_c[:] = [arg.encode('utf-8') for arg in cmd_parts]
-
-        # Set argc to the number of arguments
-        argc = len(cmd_parts)
-
-        BCPD.main.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_char_p))
-
-        # TODO: JH - Better usage, rather than the main method
-        # Might be considered in the future, but this should be enough, for now
-        BCPD.main(argc, argv_c)
-
-        bcpd_result = np.loadtxt(output_path + "y.interpolated.txt")
+        try:
+            bcpd_result = np.loadtxt(output_path + "y.interpolated.txt")
+        except FileNotFoundError:
+            print("No results generated by BCPD. Refer to the output in the console.")
+            return None
 
         for fl in glob.glob(output_path + "*.txt"):
             os.remove(fl)
-
         os.remove(target_path)
         os.remove(source_path)
 
