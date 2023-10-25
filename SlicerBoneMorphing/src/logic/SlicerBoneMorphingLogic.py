@@ -68,23 +68,19 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             -------
             vtk.vtkPolyData
         """
-        # Step 2: get the vertices and triangles (faces)
         vertices = np.asarray(mesh.vertices)
         triangles = np.asarray(mesh.triangles)
 
-        # Step 3: create the vtkPoints objects and insert the vertices
         points = vtk.vtkPoints()
 
         for v in vertices:
             points.InsertNextPoint(v)
 
-        # Step 4: create the vtkCellArray object and insert the triangles
         polys = vtk.vtkCellArray()
 
         for t in triangles:
             polys.InsertNextCell(3, t)
 
-        # Step 5: create the vtkPolyData object and insert the points and polygons
         vtkPolyData = vtk.vtkPolyData()
         vtkPolyData.SetPoints(points)
         vtkPolyData.SetPolys(polys)
@@ -142,7 +138,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             -------
             Tuple[int status, vtkPolyData model data]:
                 - status: EXIT_OK or EXIT_FAILURE
-                - model: representing the new generated model 
+                - model: representing the new generated model or None, if EXIT_FAILURE
 
         """
 

@@ -33,9 +33,9 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
       code, vtk_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode())
 
       if(code == EXIT_OK):
-        model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'TEST')
+        model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD result')
         model_node.SetAndObservePolyData(vtk_polydata)
-        model_node.CreateDefaultDisplayNodes()  # Optional
+        model_node.CreateDefaultDisplayNodes()  
 
 
             
