@@ -315,7 +315,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
       '''
       distance_threshold = voxel_size * 0.4
 
-      # NOTE: Why does it need to be estimated again? 
       source_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
       target_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
 

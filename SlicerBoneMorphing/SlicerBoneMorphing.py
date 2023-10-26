@@ -9,7 +9,7 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "Slicer Bone Morphing" 
-    self.parent.categories = [""] # TODO: Change to an appropriate category
+    self.parent.categories = ["Morphing"] 
     self.parent.dependencies = []
     self.parent.contributors = ["Jan Heres (University of West Bohemia), Eva C. Herbst (ETH Zurich), Arthur Porto (Louisiana State University)"] 
     self.parent.helpText = """
@@ -18,5 +18,5 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
     """
     self.parent.acknowledgementText = """
         Credits: Jan Heres
-        I would love to thank my awesome colleagues Eva C. Herbst and Arthur Porto for contributing to this project! 
+        I would love to thank my awesome colleagues Eva C. Herbst and Arthur Porto for their priceless contributions to this project! 
     """    
