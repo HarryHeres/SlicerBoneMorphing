@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>546</width>
-    <height>476</height>
+    <height>759</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -19,6 +19,9 @@
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="sourceNodeSelectionBoxLabel">
+        <property name="toolTip">
+         <string>Select a node that represents the reference model</string>
+        </property>
         <property name="text">
          <string>Source: </string>
         </property>
@@ -50,6 +53,9 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="foundationNodeSelectionBoxLabel">
+        <property name="toolTip">
+         <string>Select a node that represents the target model (the one to be deformed)</string>
+        </property>
         <property name="text">
          <string>Target: </string>
         </property>
@@ -80,30 +86,341 @@
       <string>BCPD Parameters</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="bcpdDeformationVectorLengthLabel">
-        <property name="text">
-         <string>Deformation Vector Length</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="bcpdDeformationVectorLengthSpinBox">
+      <item row="3" column="0">
+       <widget class="QLabel" name="bcpdModeLabel">
         <property name="toolTip">
-         <string>Expected length of the deformation vector. Lower means longer vector. Only a positive integer</string>
+         <string>Model registration mode </string>
         </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="value">
-         <number>10</number>
+        <property name="text">
+         <string>Mode:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
+      <item row="3" column="1">
+       <widget class="QComboBox" name="bcpdModeComboBox">
+        <property name="toolTip">
+         <string>Model registration mode </string>
+        </property>
+        <property name="currentText">
+         <string/>
+        </property>
+        <property name="currentIndex">
+         <number>-1</number>
+        </property>
+        <property name="placeholderText">
+         <string>Select BCPD mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0" colspan="2">
        <widget class="QPushButton" name="bcpdResetParametersPushButton">
         <property name="text">
          <string>Reset parameters to default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="ctkCollapsibleGroupBox" name="bpcdKernelParametersCollapsibleGroupBox">
+        <property name="title">
+         <string>Kernel parameters</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="bcpdStandardKernelLabel">
+           <property name="text">
+            <string>Standard kernel: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="ctkComboBox" name="bcpdStandardKernelComboBox"/>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QGroupBox" name="bcpdGeodesicKernelGroupBox">
+           <property name="title">
+            <string>Geodesic Kernel</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="bcpdGeodesicKernelTauLabel">
+              <property name="toolTip">
+               <string>Tau. The rate controlling the balance between geodesic and Gaussian kernels.</string>
+              </property>
+              <property name="text">
+               <string>Kernel balance rate (tau): </string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox">
+              <property name="maximum">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="bcpdGeodesicKernelInputMeshCheckBox">
+              <property name="text">
+               <string>I have an input mesh</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="bcpdGeodesicKernelInputMeshLabel">
+              <property name="toolTip">
+               <string>The file that defines a triangle mesh.</string>
+              </property>
+              <property name="text">
+               <string>Input mesh path:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="bcpdGeodesicKernelNeighboursLabel">
+              <property name="toolTip">
+               <string>The number of neighbors for each node, required for k-NN graph construction.</string>
+              </property>
+              <property name="text">
+               <string>kNN neighbours</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="spinBoxbcpdGeodesicKernelNeighboursSpinBox">
+              <property name="toolTip">
+               <string>The number of neighbors for each node, required for k-NN graph construction.</string>
+              </property>
+              <property name="value">
+               <number>10</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="bcpdGeodesicKernelInputMeshLineEdit">
+              <property name="toolTip">
+               <string>The file that defines a triangle mesh.</string>
+              </property>
+              <property name="placeholderText">
+               <string>Absolute path to the input mesh file </string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="bcpdGeodesicKernelRadiusLabel">
+              <property name="toolTip">
+               <string>The radius that defines neighbors for each node, required for k-NN graph construction.</string>
+              </property>
+              <property name="text">
+               <string>kNN neighbor radius </string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="bcpdGeodesicKernelRadiusDoubleSpinBox">
+              <property name="toolTip">
+               <string>The radius that defines neighbors for each node, required for k-NN graph construction.</string>
+              </property>
+              <property name="decimals">
+               <number>3</number>
+              </property>
+              <property name="maximum">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>10.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="bcpdGeodesicKernelBetaLabel">
+              <property name="toolTip">
+               <string> Beta. Positive. Gaussian function's width.</string>
+              </property>
+              <property name="text">
+               <string>Gaussian function width (beta): </string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QDoubleSpinBox" name="bcpdGeodesicKernelBetaDoubleSpinBox">
+              <property name="toolTip">
+               <string> Beta. Positive. Gaussian function's width.</string>
+              </property>
+              <property name="decimals">
+               <number>3</number>
+              </property>
+              <property name="maximum">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="ctkCollapsibleGroupBox" name="bcpdTuningParametersCollapsibleGroupBox">
+        <property name="title">
+         <string>Tuning parameters</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_3">
+         <item row="0" column="0">
+          <widget class="QLabel" name="bcpdOmegaLabel">
+           <property name="toolTip">
+            <string>Omega. Outlier probability in (0,1).</string>
+           </property>
+           <property name="text">
+            <string>Outlier probability (omega):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdOmegaDoubleSpinBox">
+           <property name="toolTip">
+            <string>Omega. Outlier probability in (0,1).</string>
+           </property>
+           <property name="prefix">
+            <string/>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>0.001000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>0.999000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="bcpdLambdaLabel">
+           <property name="toolTip">
+            <string>Lambda. Positive. It controls the expected length of deformation vectors. Smaller is longer.</string>
+           </property>
+           <property name="text">
+            <string>Deformation vector length (lambda):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdLambdaDoubleSpinBox">
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="bcpdBetaLabel">
+           <property name="toolTip">
+            <string>Beta. Positive. It controls the range where deformation vectors are smoothed.</string>
+           </property>
+           <property name="text">
+            <string>Deformation smoothing range (beta):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdBetaDoubleSpinBox">
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="bcpdGammaLabel">
+           <property name="toolTip">
+            <string>Gamma. Positive. It defines the randomness of the point matching at the beginning of the optimization.</string>
+           </property>
+           <property name="text">
+            <string>Point matching randomness (gamma): </string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdGammaDoubleSpinBox">
+           <property name="toolTip">
+            <string>Gamma. Positive. It defines the randomness of the point matching at the beginning of the optimization.</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="bcpdKappaLabel">
+           <property name="toolTip">
+            <string>Kappa. Positive. It controls the randomness of mixing coefficients.</string>
+           </property>
+           <property name="text">
+            <string>Mixing coefficient randomness (kappa):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdKappaDoubleSpinBox">
+           <property name="toolTip">
+            <string>Kappa. Positive. It controls the randomness of mixing coefficients. Value 1000 is considered &quot;infinity&quot;</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="bcpdAdvancedParametersCheckBox">
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Show more granular controls over the BCPD algorithm</string>
+        </property>
+        <property name="text">
+         <string>Show advanced controls</string>
         </property>
        </widget>
       </item>
@@ -111,7 +428,7 @@
     </widget>
    </item>
    <item>
-    <spacer name="verticalSpacer_2">
+    <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
@@ -143,6 +460,17 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>ctkCollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>ctkCollapsibleGroupBox.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkComboBox</class>
+   <extends>QComboBox</extends>
+   <header>ctkComboBox.h</header>
+  </customwidget>
+  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -156,8 +484,6 @@
  </customwidgets>
  <tabstops>
   <tabstop>inputSectionCollapsibleButton</tabstop>
-  <tabstop>bcpdParametersCollapsibleButton</tabstop>
-  <tabstop>bcpdDeformationVectorLengthSpinBox</tabstop>
  </tabstops>
  <resources/>
  <connections>
