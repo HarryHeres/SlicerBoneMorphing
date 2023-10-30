@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>625</width>
-    <height>1302</height>
+    <width>513</width>
+    <height>1745</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -99,33 +99,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="bcpdModeLabel">
-        <property name="toolTip">
-         <string>Model registration mode </string>
-        </property>
-        <property name="text">
-         <string>Mode:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QComboBox" name="bcpdModeComboBox">
-        <property name="toolTip">
-         <string>Model registration mode </string>
-        </property>
-        <property name="currentText">
-         <string/>
-        </property>
-        <property name="currentIndex">
-         <number>-1</number>
-        </property>
-        <property name="placeholderText">
-         <string>Select BCPD mode</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
+      <item row="3" column="0" colspan="2">
        <widget class="ctkCollapsibleGroupBox" name="bcpdTuningParametersCollapsibleGroupBox">
         <property name="title">
          <string>Tuning parameters</string>
@@ -270,7 +244,7 @@
         </layout>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="5" column="0" colspan="2">
        <widget class="ctkCollapsibleGroupBox" name="bpcdKernelParametersCollapsibleGroupBox">
         <property name="title">
          <string>Kernel parameters</string>
@@ -459,7 +433,7 @@
         </layout>
        </widget>
       </item>
-      <item row="7" column="0">
+      <item row="6" column="0" colspan="2">
        <widget class="ctkCollapsibleGroupBox" name="bcpdAccelerationGroupBox">
         <property name="title">
          <string>Acceleration</string>
@@ -477,6 +451,9 @@
          </item>
          <item row="3" column="0" colspan="2">
           <widget class="QGroupBox" name="bcpdAccelerationManualGroupBox">
+           <property name="toolTip">
+            <string>Manual acceleration methods. For optimal convergence, use both Nystorm and KD Tree search</string>
+           </property>
            <property name="title">
             <string>Manual acceleration</string>
            </property>
@@ -506,7 +483,7 @@
                <item row="0" column="1">
                 <widget class="QSpinBox" name="bcpdAccelerationManualNystormKSpinBox">
                  <property name="maximum">
-                  <number>100</number>
+                  <number>1000000</number>
                  </property>
                  <property name="value">
                   <number>70</number>
@@ -521,10 +498,20 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QSpinBox" name="bcpdAccelerationManualNystormJSpinBox"/>
+                <widget class="QSpinBox" name="bcpdAccelerationManualNystormJSpinBox">
+                 <property name="maximum">
+                  <number>1000000</number>
+                 </property>
+                 <property name="value">
+                  <number>300</number>
+                 </property>
+                </widget>
                </item>
                <item row="2" column="0">
                 <widget class="QLabel" name="bcpdAccelerationManualNystormRLabel">
+                 <property name="toolTip">
+                  <string>Random number seed for the Nystrom method. Reproducibility is guaranteed if the same number is specified.</string>
+                 </property>
                  <property name="text">
                   <string>Randomness seed</string>
                  </property>
@@ -532,6 +519,9 @@
                </item>
                <item row="2" column="1">
                 <widget class="QSpinBox" name="bcpdAccelerationManualNystormRSpinBox">
+                 <property name="toolTip">
+                  <string>Random number seed for the Nystrom method. Reproducibility is guaranteed if the same number is specified.</string>
+                 </property>
                  <property name="minimum">
                   <number>1</number>
                  </property>
@@ -557,6 +547,9 @@
               <layout class="QFormLayout" name="formLayout_10">
                <item row="0" column="0">
                 <widget class="QLabel" name="bcpdAccelerationManualKdTreeScaleLabel">
+                 <property name="toolTip">
+                  <string>Scale factor of sigma that defines areas to search for neighbors.</string>
+                 </property>
                  <property name="text">
                   <string>Scale factor: </string>
                  </property>
@@ -564,6 +557,58 @@
                </item>
                <item row="0" column="1">
                 <widget class="QDoubleSpinBox" name="bcpdAccelerationManualKdTreeScaleDoubleSpinBox">
+                 <property name="toolTip">
+                  <string>Scale factor of sigma that defines areas to search for neighbors.</string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>1.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>7.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="bcpdAccelerationManualKdTreeRadiusLabel">
+                 <property name="toolTip">
+                  <string>Maximum radius to search for neighbors.</string>
+                 </property>
+                 <property name="text">
+                  <string>Maximum radius (sigma): </string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QDoubleSpinBox" name="bcpdAccelerationManualKdTreeRadiusDoubleSpinBox">
+                 <property name="toolTip">
+                  <string>Maximum radius to search for neighbors.</string>
+                 </property>
+                 <property name="value">
+                  <double>0.150000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="bcpdAccelerationManualKdTreeThresholdLabel">
+                 <property name="toolTip">
+                  <string>The value of sigma at which the KD tree search is turned on.</string>
+                 </property>
+                 <property name="text">
+                  <string>Sigma threshold:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="bcpdAccelerationManualKdTreeThresholdDoubleSpinBox">
+                 <property name="toolTip">
+                  <string>The value of sigma at which the KD tree search is turned on.</string>
+                 </property>
                  <property name="decimals">
                   <number>3</number>
                  </property>
@@ -571,7 +616,7 @@
                   <double>100.000000000000000</double>
                  </property>
                  <property name="value">
-                  <double>1.000000000000000</double>
+                  <double>0.200000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -589,6 +634,9 @@
            <layout class="QFormLayout" name="formLayout_9">
             <item row="0" column="0">
              <widget class="QCheckBox" name="bcpdAccelerationAutomaticVbiCheckBox">
+              <property name="toolTip">
+               <string>Variational Bazes Inference acceleration</string>
+              </property>
               <property name="text">
                <string>VBI acceleration</string>
               </property>
@@ -596,6 +644,9 @@
             </item>
             <item row="1" column="0">
              <widget class="QCheckBox" name="bcpdAccelerationAutomaticOutsideCheckBox">
+              <property name="toolTip">
+               <string>Downsampling and deformation vector interpolation</string>
+              </property>
               <property name="text">
                <string>BCPD++ acceleration</string>
               </property>
@@ -607,7 +658,153 @@
         </layout>
        </widget>
       </item>
+      <item row="8" column="0" colspan="2">
+       <widget class="ctkCollapsibleGroupBox" name="bcpdDownsamplingCollapsibleGroupBox">
+        <property name="toolTip">
+         <string>Note: Downsampling automaticallz activates the deformation vecttor interpolation</string>
+        </property>
+        <property name="title">
+         <string>Downsampling</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <layout class="QFormLayout" name="formLayout_11">
+         <item row="0" column="0">
+          <widget class="QLabel" name="bcpdDownsamplingLabel">
+           <property name="toolTip">
+            <string>Downsampling options. For syntax, please check the documentation</string>
+           </property>
+           <property name="text">
+            <string>Options: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="bcpdDownsamplingLineEdit">
+           <property name="toolTip">
+            <string>Downsampling options. For syntax, please check the documentation</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="2">
+       <widget class="ctkCollapsibleGroupBox" name="bcpdConvergenceCollapsibleGroupBox">
+        <property name="title">
+         <string>Convergence</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_12">
+         <item row="0" column="0">
+          <widget class="QLabel" name="bcpdConvergenceToleranceLabel">
+           <property name="text">
+            <string>Tolerance:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="bcpdConvergenceToleranceDoubleSpinBox">
+           <property name="decimals">
+            <number>8</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.000100000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000100000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="bcpdConverenceMaxIterationsLabel">
+           <property name="text">
+            <string>Max number of iterations:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="bcpdConvergenceMaxIterationsSpinBox">
+           <property name="minimum">
+            <number>10</number>
+           </property>
+           <property name="maximum">
+            <number>1000000</number>
+           </property>
+           <property name="value">
+            <number>1000</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="bcpdConvergenceMinIterationsSpinBox">
+           <property name="minimum">
+            <number>10</number>
+           </property>
+           <property name="maximum">
+            <number>1000</number>
+           </property>
+           <property name="value">
+            <number>30</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="bcpdConvergenceMinIterationsLabel">
+           <property name="text">
+            <string>Min number of iterations:</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
       <item row="10" column="0" colspan="2">
+       <widget class="ctkCollapsibleGroupBox" name="bcpdNormalizationCollapsibleGroupBox">
+        <property name="title">
+         <string>Normalization</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_13">
+         <item row="0" column="0">
+          <widget class="QLabel" name="bcpdNormalizationLabel">
+           <property name="toolTip">
+            <string>Please, refer to the documentation for the explanation of choices</string>
+           </property>
+           <property name="text">
+            <string>Options:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="bcpdNormalizationComboBox">
+           <property name="toolTip">
+            <string>Please, refer to the documentation for the explanation of choices</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="12" column="0" colspan="2">
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="13" column="0" colspan="2">
        <widget class="QPushButton" name="bcpdResetParametersPushButton">
         <property name="text">
          <string>Reset parameters to default</string>
