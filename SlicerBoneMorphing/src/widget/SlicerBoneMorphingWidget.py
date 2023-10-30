@@ -9,6 +9,10 @@ class BCPDMode(Enum):
     STANDARD = "bcpd"
     GEODESIC = "gbcpd"
 
+class BCPDAccelerationMode(Enum):
+    AUTOMATIC = "Automatic"
+    MANUAL = "Manual"
+
 class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
@@ -34,14 +38,30 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.ui.targetNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
     self.ui.generateModelButton.clicked.connect(self.generate_model)
 
-    bcpd_mode_combo_box = self.ui.bcpdModeComboBox
-    for mode in list(BCPDMode):
-        bcpd_mode_combo_box.addItem(mode.name, mode)
-    bcpd_mode_combo_box.setCurrentIndex(0)
+    self.set_default_parameters()
+
 
   def set_default_parameters(self):
-      print("Test")
+    self.ui.bcpdAdvancedControlsGroupBox.setVisible(False)
+
+    acceleration_combo_box = self.ui.bcpdAccelerationModeComboBox
+    for mode in list(BCPDAccelerationMode):
+        acceleration_combo_box.addItem(mode.value, mode)
+    acceleration_combo_box.setCurrentIndex(0)
+    acceleration_combo_box.currentIndexChanged.connect(self.show_acceleration_mode)
+
+  def show_acceleration_mode(self, currentMode):
+    if currentMode == BCPDAccelerationMode.AUTOMATIC.name:
+        showAutomatic = True 
+        showManual = False
+    else:
+        showAutomatic = False
+        showManual = True
+
     
+    self.ui.bcpdAccelerationAutomaticGroupBox.setVisible(showAutomatic)
+    self.ui.bcpdAccelerationManualGroupBox.setVisible(showManual)
+
 
   def generate_model(self):
     mode = self.ui.bcpdModeComboBox.currentData
