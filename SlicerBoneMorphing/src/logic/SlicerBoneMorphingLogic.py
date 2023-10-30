@@ -340,7 +340,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         np.savetxt (target_path, target_array, delimiter=',')
         np.savetxt (source_path, source_array, delimiter=',')
 
-        cmd = f'{BCPD_EXEC} -x {target_path} -y {source_path} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1 -o {output_path}'
+        cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path} -l10 -b10 -g0.1 -K140 -J500 -c1e-6 -p -d7 -e0.3 -f0.3 -ux -DB,5000,0.08 -ux -N1 -o {output_path}'
 
         subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
 
