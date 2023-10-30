@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
-    <height>1257</height>
+    <width>666</width>
+    <height>529</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -18,6 +18,9 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+     <property name="collapsed">
+      <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
@@ -89,6 +92,9 @@
       <string>BCPD Parameters</string>
      </property>
      <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="collapsed">
       <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
@@ -99,6 +105,9 @@
         </property>
         <property name="checked">
          <bool>false</bool>
+        </property>
+        <property name="collapsed">
+         <bool>true</bool>
         </property>
         <layout class="QFormLayout" name="formLayout_3">
          <item row="0" column="0">
@@ -264,11 +273,17 @@
            <property name="title">
             <string>Kernel parameters</string>
            </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
            <property name="checked">
             <bool>false</bool>
            </property>
+           <property name="collapsed">
+            <bool>true</bool>
+           </property>
            <layout class="QFormLayout" name="formLayout_4">
-            <item row="1" column="0" colspan="2">
+            <item row="2" column="0" colspan="2">
              <widget class="QGroupBox" name="bcpdGeodesicKernelGroupBox">
               <property name="title">
                <string>Geodesic Kernel</string>
@@ -448,6 +463,35 @@
               </layout>
              </widget>
             </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QGroupBox" name="bcpdStandardKernelGroupBox">
+              <property name="title">
+               <string>Standard kernel</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_15">
+               <item row="0" column="0">
+                <widget class="QLabel" name="bcpdStandardKernelTypeLabel">
+                 <property name="text">
+                  <string>Kernel type:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="bcpdStandardKernelComboBox"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="bcpdKernelTypeLabel">
+              <property name="text">
+               <string>Kernel type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="bcpdKernelTypeComboBox"/>
+            </item>
            </layout>
           </widget>
          </item>
@@ -457,7 +501,7 @@
             <string>Acceleration</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_7">
             <item row="1" column="0">
@@ -658,6 +702,9 @@
                  <property name="text">
                   <string>VBI acceleration</string>
                  </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item row="1" column="0">
@@ -667,6 +714,9 @@
                  </property>
                  <property name="text">
                   <string>BCPD++ acceleration</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -692,6 +742,9 @@
            </property>
            <property name="checked">
             <bool>false</bool>
+           </property>
+           <property name="collapsed">
+            <bool>true</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_11">
             <item row="0" column="0">
@@ -721,6 +774,9 @@
            </property>
            <property name="checked">
             <bool>false</bool>
+           </property>
+           <property name="collapsed">
+            <bool>true</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_12">
             <item row="0" column="0">
