@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>666</width>
-    <height>529</height>
+    <height>1340</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -92,10 +92,10 @@
       <string>BCPD Parameters</string>
      </property>
      <property name="checked">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="collapsed">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
@@ -104,10 +104,10 @@
          <string>Tuning parameters</string>
         </property>
         <property name="checked">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="collapsed">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <layout class="QFormLayout" name="formLayout_3">
          <item row="0" column="0">
@@ -299,16 +299,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <widget class="QDoubleSpinBox" name="doubleSpinBox">
-                 <property name="maximum">
-                  <double>100.000000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>1.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="0">
                 <widget class="QCheckBox" name="bcpdGeodesicKernelInputMeshCheckBox">
                  <property name="text">
@@ -460,6 +450,16 @@
                  </property>
                 </widget>
                </item>
+               <item row="0" column="1">
+                <widget class="QDoubleSpinBox" name="bcpdGeodesicKernelTauDoubleSpinBox">
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>1.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -543,7 +543,7 @@
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QSpinBox" name="bcpdAccelerationManualNystormKSpinBox">
+                   <widget class="QSpinBox" name="bcpdAccelerationManualNystormGSpinBox">
                     <property name="maximum">
                      <number>1000000</number>
                     </property>
@@ -642,7 +642,7 @@
                      <string>Maximum radius to search for neighbors.</string>
                     </property>
                     <property name="text">
-                     <string>Maximum radius (sigma): </string>
+                     <string>Maximum radius</string>
                     </property>
                    </widget>
                   </item>
@@ -708,7 +708,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QCheckBox" name="bcpdAccelerationAutomaticOutsideCheckBox">
+                <widget class="QCheckBox" name="bcpdAccelerationAutomaticPlusPlusCheckBox">
                  <property name="toolTip">
                   <string>Downsampling and deformation vector interpolation</string>
                  </property>
@@ -741,10 +741,10 @@
             <bool>true</bool>
            </property>
            <property name="checked">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="collapsed">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_11">
             <item row="0" column="0">
@@ -761,6 +761,9 @@
              <widget class="QLineEdit" name="bcpdDownsamplingLineEdit">
               <property name="toolTip">
                <string>Downsampling options. For syntax, please check the documentation</string>
+              </property>
+              <property name="text">
+               <string>-DB,5000,0.08</string>
               </property>
              </widget>
             </item>

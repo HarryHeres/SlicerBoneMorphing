@@ -1,4 +1,4 @@
-import src.logic.Constants 
+import src.logic.Constants as Constants
 import ctk
 import slicer
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleWidget
@@ -60,7 +60,51 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
 
   def reset_parameters_to_default(self):
-      self.ui.bcpdOmegaDoubleSpinBox.value = 0.1
+      ## Tuning parameters ## 
+      self.ui.bcpdOmegaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_OMEGA
+      self.ui.bcpdLambdaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_LAMBDA
+      self.ui.bcpdBetaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_BETA
+      self.ui.bcpdGammaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_GAMMA
+      self.ui.bcpdKappaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KAPPA
+
+      # self.ui.bcpdAdvancedParametersCheckBox.checked = False
+      
+      ## Kernel parameters ##
+      self.ui.bcpdKernelTypeComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_KERNEL_TYPE)
+      self.ui.bcpdStandardKernelComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE)
+      self.ui.bcpdGeodesicKernelTauDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_TAU
+      self.ui.bcpdGeodesicKernelInputMeshCheckBox.checked = False
+      self.ui.bcpdGeodesicKernelInputMeshLineEdit.text = Constants.BCPD_DEFAULT_VALUE_INPUT_MESH_PATH
+      self.ui.bcpdGeodesicKernelNeighboursSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_NEIGBOURS
+      self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_NEIGHBOUR_RADIUS
+      self.ui.bcpdGeodesicKernelBetaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_BETA
+      self.ui.bcpdGeodesicKernelKTildeDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_K_TILDE
+      self.ui.bcpdGeodesicKernelEpsilonDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_EPSILON
+
+
+      ## Acceleration parameters ##
+      self.ui.bcpdAccelerationModeComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_ACCELERATION_MODE)
+      self.ui.bcpdAccelerationAutomaticVbiCheckBox.checked = True
+      self.ui.bcpdAccelerationAutomaticPlusPlusCheckBox.checked = True
+      self.ui.bcpdAccelerationManualNystormGSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_G
+      self.ui.bcpdAccelerationManualNystormJSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_J
+      self.ui.bcpdAccelerationManualNystormRSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_R
+      self.ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SCALE
+      self.ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_RADIUS
+      self.ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SIGMA_THRESHOLD
+
+      ## Downsampling options ##
+      self.ui.bcpdDownsamplingLineEdit.text = Constants.BCPD_DEFAULT_VALUE_DOWNSAMPLING_OPTIONS
+
+      ## Convergence options ## 
+      self.ui.bcpdConvergenceToleranceDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_TOLERANCE
+      self.ui.bcpdConvergenceMaxIterationsSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_MAX_ITERATIONS
+      self.ui.bcpdConvergenceMinIterationsSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_MIN_ITERATIONS
+
+      ## Normalization options ## 
+      self.ui.bcpdNormalizationComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_NORMALIZATION_OPTIONS)
+      
+
 
   def setup_combo_box(self, comboBox: QComboBox, enum, onSelectionChanged): 
     """
@@ -99,6 +143,11 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     
     self.ui.bcpdAccelerationAutomaticGroupBox.setVisible(showAutomatic)
     self.ui.bcpdAccelerationManualGroupBox.setVisible(showManual)
+
+    def parse_parameters(self): 
+        params = [] 
+
+        return params
 
 
   def generate_model(self):
