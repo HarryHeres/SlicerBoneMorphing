@@ -4,7 +4,7 @@ from src.logic.Enums import BCPDAccelerationMode, BCPDKernelMode, BCPDNormalizat
 EXIT_OK = 0
 EXIT_FAILURE = 1
 
-BCPD_MULTIPLE_PARAMETERS_SEPARATOR = ","
+BCPD_MULTIPLE_VALUES_SEPARATOR = ","
 """
     Used when one parameter have multiple values, e.g. -G [string,real,file]
 """
