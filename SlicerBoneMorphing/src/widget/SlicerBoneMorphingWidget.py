@@ -1,4 +1,4 @@
-import src.logic.Constants as Constants
+from src.logic.Constants import *
 import ctk
 import slicer
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleWidget
@@ -7,6 +7,8 @@ from src.logic.SlicerBoneMorphingLogic import SlicerBoneMorphingLogic
 from src.logic.Enums import BCPDAccelerationMode, BCPDKernelMode, BCPDNormalizationOptions, BCPDStandardKernelMode
 from enum import Enum
 from qt import QComboBox
+
+import os 
 
 class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
@@ -61,48 +63,48 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
   def reset_parameters_to_default(self):
       ## Tuning parameters ## 
-      self.ui.bcpdOmegaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_OMEGA
-      self.ui.bcpdLambdaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_LAMBDA
-      self.ui.bcpdBetaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_BETA
-      self.ui.bcpdGammaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_GAMMA
-      self.ui.bcpdKappaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KAPPA
+      self.ui.bcpdOmegaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_OMEGA
+      self.ui.bcpdLambdaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_LAMBDA
+      self.ui.bcpdBetaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_BETA
+      self.ui.bcpdGammaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_GAMMA
+      self.ui.bcpdKappaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_KAPPA
 
       # self.ui.bcpdAdvancedParametersCheckBox.checked = False
       
       ## Kernel parameters ##
-      self.ui.bcpdKernelTypeComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_KERNEL_TYPE)
-      self.ui.bcpdStandardKernelComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE)
-      self.ui.bcpdGeodesicKernelTauDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_TAU
+      self.ui.bcpdKernelTypeComboBox.setCurrentIndex(BCPD_DEFAULT_VALUE_KERNEL_TYPE)
+      self.ui.bcpdStandardKernelComboBox.setCurrentIndex(BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE)
+      self.ui.bcpdGeodesicKernelTauDoubleSpinBox.value = BCPD_DEFAULT_VALUE_TAU
       self.ui.bcpdGeodesicKernelInputMeshCheckBox.checked = False
-      self.ui.bcpdGeodesicKernelInputMeshLineEdit.text = Constants.BCPD_DEFAULT_VALUE_INPUT_MESH_PATH
-      self.ui.bcpdGeodesicKernelNeighboursSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_NEIGBOURS
-      self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_NEIGHBOUR_RADIUS
-      self.ui.bcpdGeodesicKernelBetaDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_BETA
-      self.ui.bcpdGeodesicKernelKTildeDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_K_TILDE
-      self.ui.bcpdGeodesicKernelEpsilonDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_KERNEL_EPSILON
+      self.ui.bcpdGeodesicKernelInputMeshLineEdit.text = BCPD_DEFAULT_VALUE_INPUT_MESH_PATH
+      self.ui.bcpdGeodesicKernelNeighboursSpinBox.value = BCPD_DEFAULT_VALUE_KERNEL_NEIGBOURS
+      self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value = BCPD_DEFAULT_VALUE_KERNEL_NEIGHBOUR_RADIUS
+      self.ui.bcpdGeodesicKernelBetaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_KERNEL_BETA
+      self.ui.bcpdGeodesicKernelKTildeDoubleSpinBox.value = BCPD_DEFAULT_VALUE_KERNEL_K_TILDE
+      self.ui.bcpdGeodesicKernelEpsilonDoubleSpinBox.value = BCPD_DEFAULT_VALUE_KERNEL_EPSILON
 
 
       ## Acceleration parameters ##
-      self.ui.bcpdAccelerationModeComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_ACCELERATION_MODE)
+      self.ui.bcpdAccelerationModeComboBox.setCurrentIndex(BCPD_DEFAULT_VALUE_ACCELERATION_MODE)
       self.ui.bcpdAccelerationAutomaticVbiCheckBox.checked = True
       self.ui.bcpdAccelerationAutomaticPlusPlusCheckBox.checked = True
-      self.ui.bcpdAccelerationManualNystormGSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_G
-      self.ui.bcpdAccelerationManualNystormJSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_J
-      self.ui.bcpdAccelerationManualNystormRSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_R
-      self.ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SCALE
-      self.ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_RADIUS
-      self.ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SIGMA_THRESHOLD
+      self.ui.bcpdAccelerationManualNystormGSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_G
+      self.ui.bcpdAccelerationManualNystormJSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_J
+      self.ui.bcpdAccelerationManualNystormRSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_R
+      self.ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SCALE
+      self.ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_RADIUS
+      self.ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value = BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SIGMA_THRESHOLD
 
       ## Downsampling options ##
-      self.ui.bcpdDownsamplingLineEdit.text = Constants.BCPD_DEFAULT_VALUE_DOWNSAMPLING_OPTIONS
+      self.ui.bcpdDownsamplingLineEdit.text = BCPD_DEFAULT_VALUE_DOWNSAMPLING_OPTIONS
 
       ## Convergence options ## 
-      self.ui.bcpdConvergenceToleranceDoubleSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_TOLERANCE
-      self.ui.bcpdConvergenceMaxIterationsSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_MAX_ITERATIONS
-      self.ui.bcpdConvergenceMinIterationsSpinBox.value = Constants.BCPD_DEFAULT_VALUE_CONVERGENCE_MIN_ITERATIONS
+      self.ui.bcpdConvergenceToleranceDoubleSpinBox.value = BCPD_DEFAULT_VALUE_CONVERGENCE_TOLERANCE
+      self.ui.bcpdConvergenceMaxIterationsSpinBox.value = BCPD_DEFAULT_VALUE_CONVERGENCE_MAX_ITERATIONS
+      self.ui.bcpdConvergenceMinIterationsSpinBox.value = BCPD_DEFAULT_VALUE_CONVERGENCE_MIN_ITERATIONS
 
       ## Normalization options ## 
-      self.ui.bcpdNormalizationComboBox.setCurrentIndex(Constants.BCPD_DEFAULT_VALUE_NORMALIZATION_OPTIONS)
+      self.ui.bcpdNormalizationComboBox.setCurrentIndex(BCPD_DEFAULT_VALUE_NORMALIZATION_OPTIONS)
       
 
 
@@ -145,9 +147,56 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     self.ui.bcpdAccelerationManualGroupBox.setVisible(showManual)
 
     def parse_parameters(self): 
-        params = [] 
+        params = {}
+        
+        ## Tuning parameters ## 
+        params[BCPD_VALUE_KEY_OMEGA] = self.ui.bcpdOmegaDoubleSpinBox.value
+        params[BCPD_VALUE_KEY_LAMBDA] = self.ui.bcpdLambdaDoubleSpinBox.value
+        params[BCPD_VALUE_KEY_BETA] = self.ui.bcpdBetaDoubleSpinBox.value
+        params[BCPD_VALUE_KEY_GAMMA] = self.ui.bcpdGammaDoubleSpinBox.value
+        params[BCPD_VALUE_KEY_KAPPA] = self.ui.bcpdKappaDoubleSpinBox.value
+
+        if self.ui.bcpdAdvancedParametersCheckBox.checked == True:
+            return self.parse_advanced_parameters(params)
 
         return params
+
+  def parse_advanced_parameters(self, params: dict):
+      if(self.ui.bcpdKernelTypeComboBox.value == BCPDKernelMode.STANDARD.value):
+          ## Tuning params ## 
+          params[BCPD_VALUE_KEY_OMEGA] = self.ui.bcpdOmegaDoubleSpinBox.value
+          params[BCPD_VALUE_KEY_LAMBDA] = self.ui.bcpdLambdaDoubleSpinBox.value
+          params[BCPD_VALUE_KEY_BETA] = self.ui.bcpdBetaDoubleSpinBox.value
+          params[BCPD_VALUE_KEY_GAMMA] = self.ui.bcpdGammaDoubleSpinBox.value
+
+          kappa = self.ui.bcpdKappaDoubleSpinBox.value
+          if kappa < BCPD_MAX_VALUE_KAPPA: # Setting it to max behaves like "infinity" 
+              params[BCPD_VALUE_KEY_KAPPA] = kappa 
+
+          ## Kernel settings ##
+          kernelType = self.ui.bcpdKernelTypeComboBox.getCurrentIndex()
+          kernelParams = ""
+          if(kernelType == BCPDKernelMode.STANDARD.value):
+              selectedKernel = self.ui.bcpdStandardKernelComboBox.getCurrentIndex()
+              if selectedKernel != BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE: # Default kernel is Gauss, which does not need to be specified 
+                  kernelParams += str(selectedKernel)
+          else: # Geodesic Kernel 
+              kernelParams += "geodesic" + BCPD_MULTIPLE_VALUES_SEPARATOR   
+
+              tau = self.ui.bcpdGeodesicKernelTauDoubleSpinBox.value
+              kernelParams += str(tau) + BCPD_MULTIPLE_VALUES_SEPARATOR
+
+              if self.ui.bcpdGeodesicKernelInputMeshCheckBox.checked == True:
+                  input_mesh_path = self.ui.bcpdGeodesicKernelInputMeshLineEdit.text
+                  if not os.path.exists(input_mesh_path):
+                      print("File '" + input_mesh_path + "' does not exist. Cancelling process...")
+                      return EXIT_FAILURE 
+                  kernelParams += input_mesh_path 
+              else:
+                  kernelParams += str(self.ui.bcpdGeodesicKernelNeighboursSpinBox.value) + BCPD_MULTIPLE_VALUES_SEPARATOR
+                  kernelParams += str(self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value) 
+
+              params[BCPD_VALUE_KEY_KERNEL] = kernelParams
 
 
   def generate_model(self):
@@ -159,16 +208,16 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
     #     print("Please, select a proper BCPD registration mode")
     # self.bcpd_options["mode"] = mode
 
-    dvl = self.ui.bcpdDeformationVectorLengthSpinBox.value
-    self.bcpd_options["b"] = dvl
+    # dvl = self.ui.bcpdDeformationVectorLengthSpinBox.value
+    # self.bcpd_options["b"] = dvl
 
 
       # code, vtk_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode())
 
-      # if(code == EXIT_OK):
-      #   model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD result')
-      #   model_node.SetAndObservePolyData(vtk_polydata)
-      #   model_node.CreateDefaultDisplayNodes()  
+    # if(code == EXIT_OK):
+    #     model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD result')
+    #     model_node.SetAndObservePolyData(vtk_polydata)
+    #     model_node.CreateDefaultDisplayNodes()  
 
     
 
