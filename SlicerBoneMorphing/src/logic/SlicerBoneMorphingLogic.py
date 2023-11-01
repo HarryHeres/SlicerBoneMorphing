@@ -50,6 +50,44 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __init__(self, parent):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
+    def generate_model(self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode, parameters) -> Tuple[int, vtk.vtkPolyData, vtk.vtkPolyData]:
+        """
+            Generates new model based on the BCPD algorithm fit between source and target models.
+
+            Parameters
+            ----------
+            vtkMRMLModelNode source_model - source (partial) model to be fit-generated
+            vtkMRMLModelNode target_model - model to fit the partial source by.
+            string parameters - parameters for the preprocessing, BCPD and postprocessing
+
+            Returns
+            -------
+            Tuple[int status, vtk.vtkPolyData generatedPolydata, vtk.vtkPolyData mergedPolydata]:
+                - status: EXIT_OK or EXIT_FAILURE
+                - generatedPolydata: Generated model by the BCPD
+                - mergedPolydata: generatedPolydata that had been merged with the targetModel
+        """
+
+        if (source_model == VALUE_NODE_NOT_SELECTED or target_model == VALUE_NODE_NOT_SELECTED):
+            print("Input or foundation model(s) were not selected")
+            return EXIT_FAILURE, None, None
+
+        err, result_icp = self.preprocess_model(
+            source_model, target_model, parameters[PREPROCESSING_KEY])
+        if err == EXIT_FAILURE:
+            print("Cannot continue with generating. Aborting...")
+            return EXIT_FAILURE, None, None
+
+        # BCPD stage
+        deformed = self.deformable_registration(source_mesh.transform(
+            result_icp.transformation), target_mesh, parameters[BCPD_KEY])
+        if (deformed == None):
+            return EXIT_FAILURE, None, None
+
+        self.postprocess_result_mesh(deformed)
+
+        return EXIT_OK, generated_polydata, merged_polydata
+
     def convert_mesh_to_vtk_polydata(self, mesh: o3d.geometry.TriangleMesh) -> vtk.vtkPolyData:
         """
             Convert o3d.geometry.TriangleMesh to vtkPolyData
@@ -121,97 +159,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         return open3d_mesh
 
-    def generate_model(self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode, parameters) -> Tuple[int, vtk.vtkPolyData, vtk.vtkPolyData]:
-        """
-            Generates new model based on the BCPD algorithm fit between source and target models.
-
-            Parameters
-            ----------
-            vtkMRMLModelNode source_model - source (partial) model to be fit-generated
-            vtkMRMLModelNode target_model - model to fit the partial source by.
-            string parameters - parameters for the preprocessing, BCPD and postprocessing
-
-            Returns
-            -------
-            Tuple[int status, vtk.vtkPolyData generatedPolydata, vtk.vtkPolyData mergedPolydata]:
-                - status: EXIT_OK or EXIT_FAILURE
-                - generatedPolydata: Generated model by the BCPD
-                - mergedPolydata: generatedPolydata that had been merged with the targetModel
-        """
-
-        NODE_NOT_SELECTED = 0  # Via Slicer documentation
-
-        if (source_model == NODE_NOT_SELECTED or target_model == NODE_NOT_SELECTED):
-            print("Input or foundation model(s) were not selected")
-            return EXIT_FAILURE, None, None
-
-        source_mesh = self.convert_model_to_mesh(source_model)
-        target_mesh = self.convert_model_to_mesh(target_model)
-
-        source_pcd = self.convert_to_point_cloud(source_mesh)
-        target_pcd = self.convert_to_point_cloud(target_mesh)
-
-        print(source_pcd)
-
-        # Calculate object size
-        size = np.linalg.norm(np.asarray(
-            target_pcd.get_max_bound()) - np.asarray(target_pcd.get_min_bound()))
-        # the 55 value seems to be too much downscaling
-        voxel_size = float(size / VOXEL_SIZE_SCALING)
-
-        source_pcd_downsampled, sourcePcdFpfh = self.preprocess_point_cloud(
-            source_pcd, voxel_size)
-        target_pcd_downsampled, targetPcdFpfh = self.preprocess_point_cloud(
-            target_pcd, voxel_size)
-
-        print(source_pcd_downsampled)
-
-        # Global registration
-        try:
-            max_attempts = 20
-            result_ransac = self.ransac_pcd_registration(
-                source_pcd_downsampled, target_pcd_downsampled, sourcePcdFpfh, targetPcdFpfh, voxel_size, max_attempts)
-        except RuntimeError:
-            print(
-                "No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
-            return EXIT_FAILURE, None, None
-
-        result_icp = self.refine_registration(
-            source_pcd, target_pcd, result_ransac, voxel_size)
-
-        # Deformable registration
-        deformed = self.deformable_registration(source_mesh.transform(
-            result_icp.transformation), target_mesh, parameters[BCPD_KEY])
-        if (deformed == None):
-            return EXIT_FAILURE, None, None
-        deformed.compute_vertex_normals()
-        target_mesh.compute_vertex_normals()
-
-        # Combine meshes (alternative - to crop the first before merging)
-        combined = deformed + target_mesh
-        combined.compute_vertex_normals()
-
-        # Simplify mesh (smoothing and filtering)
-        deformed_smp = deformed.simplify_vertex_clustering(
-            voxel_size/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
-        deformed_smp = deformed_smp.filter_smooth_simple(
-            number_of_iterations=SMOOTHING_ITERATIONS)
-        deformed_smp = deformed_smp.filter_smooth_taubin(
-            number_of_iterations=FILTERING_ITEARTIONS)
-
-        mesh_smp = combined.simplify_vertex_clustering(
-            voxel_size/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_smp = mesh_smp.filter_smooth_simple(
-            number_of_iterations=SMOOTHING_ITERATIONS)
-        mesh_smp = mesh_smp.filter_smooth_taubin(
-            number_of_iterations=FILTERING_ITEARTIONS)
-        # mesh_smp.compute_vertex_normals() # TODO: Is this needed?
-
-        generated_polydata = self.convert_mesh_to_vtk_polydata(deformed_smp)
-        merged_polydata = self.convert_mesh_to_vtk_polydata(mesh_smp)
-
-        return EXIT_OK, generated_polydata, merged_polydata
-
     def convert_to_point_cloud(self, mesh: o3d.geometry.TriangleMesh) -> o3d.geometry.PointCloud:
         """
             Convert o3d.geometry.TriangleMesh to o3d.geometry.PointCloud
@@ -233,6 +180,44 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         pcd.normals = mesh.vertex_normals
 
         return pcd
+
+    def preprocess_model(self, source_model, target_model, parameters) -> Tuple[int, o3d.pipelines.registration.RegistrationResult]:
+        """
+            Preprocess model before advancing into the generation (BCPD) stage. This method converts the input models into respective point clouds, then performs RANSAC best fit transformation from source to target and returns a refined registration result
+
+            Parameters
+            ----------
+
+        """
+        source_mesh = self.convert_model_to_mesh(source_model)
+        target_mesh = self.convert_model_to_mesh(target_model)
+
+        source_pcd = self.convert_to_point_cloud(source_mesh)
+        target_pcd = self.convert_to_point_cloud(target_mesh)
+
+        # Calculate object size
+        size = np.linalg.norm(np.asarray(
+            target_pcd.get_max_bound()) - np.asarray(target_pcd.get_min_bound()))
+        voxel_size = float(
+            size / parameters[PREPROCESSING_KEY_VOXEL_SIZE_SCALING])
+
+        source_pcd_downsampled, source_pcd_fpfh = self.preprocess_point_cloud(
+            source_pcd, voxel_size)
+        target_pcd_downsampled, target_pcd_fpfh = self.preprocess_point_cloud(
+            target_pcd, voxel_size)
+
+        try:
+            result_ransac = self.ransac_pcd_registration(
+                source_pcd_downsampled, target_pcd_downsampled, source_pcd_fpfh, target_pcd_fpfh, voxel_size, parameters[PREPROCESSING_RANSAC_MAX_ATTEMPTS])
+        except RuntimeError:
+            print(
+                "No ideal fit was found using the RANSAC algorithm. Please, try adjusting the parameters")
+            return EXIT_FAILURE, None
+
+        result_icp = self.refine_registration(
+            source_pcd, target_pcd, result_ransac, voxel_size)
+
+        return EXIT_OK, result_icp
 
     def preprocess_point_cloud(self, pcd: o3d.geometry.PointCloud, voxelSize: float) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Feature]:
         ''' 

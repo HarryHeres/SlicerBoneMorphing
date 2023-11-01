@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>666</width>
-    <height>1340</height>
+    <width>564</width>
+    <height>775</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -17,10 +17,10 @@
       <string>Input</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="collapsed">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
@@ -87,15 +87,38 @@
     </widget>
    </item>
    <item>
+    <widget class="ctkCollapsibleButton" name="preprocessingParametersCollapsibleButton">
+     <property name="text">
+      <string>Preprocessing parameters</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_16">
+      <item row="0" column="0">
+       <widget class="QLabel" name="preprocessingVoxelScalingLabel">
+        <property name="text">
+         <string>Voxel scaling:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="ctkCollapsibleButton" name="bcpdParametersCollapsibleButton">
      <property name="text">
-      <string>BCPD Parameters</string>
+      <string>BCPD parameters</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="collapsed">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">

@@ -158,6 +158,8 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params[PREPROCESSING_KEY] = self.parse_parameters_preprocessing()
         params[BCPD_KEY] = self.parse_parameters_bcpd()
 
+        return params
+
     def parse_parameters_preprocessing(self) -> dict:
         params = {}
 
@@ -258,11 +260,10 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             Generate button callback. Calls the Logic's generate_model method and adds the results into the scene
         """
         params = self.parse_parameters()
-
         params_string = ""
         for key in params.keys():
-            params_string += key + str(params[key]) + " "
-        print("BCPD parameters: " + params_string)
+            params_string += key + str(params[key]) "\n"
+        print("Parameters: " + params_string)
 
         # err, generated_polydata, merged_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode(), params_string)
 
