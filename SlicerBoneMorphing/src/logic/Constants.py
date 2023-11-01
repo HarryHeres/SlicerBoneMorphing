@@ -9,6 +9,9 @@ BCPD_MULTIPLE_VALUES_SEPARATOR = ","
     Used when one parameter have multiple values, e.g. -G [string,real,file]
 """
 
+PREPROCESSING_KEY = "preprocessing"
+BCPD_KEY = "bcpd"
+
 ###  BCPD VALUE KEYS ###
 ## Tuning ##
 BCPD_VALUE_KEY_OMEGA = "-w"

@@ -112,47 +112,60 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.ui.bcpdNormalizationComboBox.setCurrentIndex(
             BCPD_DEFAULT_VALUE_NORMALIZATION_OPTIONS)
 
-    def setup_combo_box(self, comboBox: QComboBox, enum, onSelectionChanged):
+    def setup_combo_box(self, combo_box: QComboBox, enum, onSelectionChanged):
         """
             Method for setting up combo box and its possible values
         """
         for mode in list(enum):
-            comboBox.addItem(mode.name, mode)
+            combo_box.addItem(mode.name, mode)
         if onSelectionChanged is not None:
-            comboBox.currentIndexChanged.connect(onSelectionChanged)
-        comboBox.setCurrentIndex(0)
+            combo_box.currentIndexChanged.connect(onSelectionChanged)
+        combo_box.setCurrentIndex(0)
 
-    def show_kernel_type(self, currentIndex):
+    def show_kernel_type(self, current_index):
         """
             Kernel type callback
         """
-        if currentIndex == BcpdKernelType.STANDARD.value:
-            showStandardSettings = True
-            showGeodesicSettings = False
+        if current_index == BcpdKernelType.STANDARD.value:
+            show_standard_setting = True
+            show_geodesic_settings = False
         else:
-            showStandardSettings = False
-            showGeodesicSettings = True
+            show_standard_setting = False
+            show_geodesic_settings = True
 
-        self.ui.bcpdStandardKernelGroupBox.setVisible(showStandardSettings)
-        self.ui.bcpdGeodesicKernelGroupBox.setVisible(showGeodesicSettings)
+        self.ui.bcpdStandardKernelGroupBox.setVisible(show_standard_setting)
+        self.ui.bcpdGeodesicKernelGroupBox.setVisible(show_geodesic_settings)
 
     def show_acceleration_mode(self, currentIndex):
         """
             Acceleration mode combo box callback
         """
         if currentIndex == BcpdAccelerationMode.AUTOMATIC.value:
-            showAutomatic = True
-            showManual = False
+            show_automatic = True
+            show_manual = False
         else:
-            showAutomatic = False
-            showManual = True
+            show_automatic = False
+            show_manual = True
 
-        self.ui.bcpdAccelerationAutomaticGroupBox.setVisible(showAutomatic)
-        self.ui.bcpdAccelerationManualGroupBox.setVisible(showManual)
+        self.ui.bcpdAccelerationAutomaticGroupBox.setVisible(show_automatic)
+        self.ui.bcpdAccelerationManualGroupBox.setVisible(show_manual)
 
     def parse_parameters(self) -> dict:
         """
-            Parsing parameters from the UI user option elements 
+            Parsing parameters from the UI user option elements
+        """
+        params = {}
+        params[PREPROCESSING_KEY] = self.parse_parameters_preprocessing()
+        params[BCPD_KEY] = self.parse_parameters_bcpd()
+
+    def parse_parameters_preprocessing(self) -> dict:
+        params = {}
+
+        return params
+
+    def parse_parameters_bcpd(self) -> dict:
+        """
+            Parsing parameters from the UI for the BCPD stage
         """
         params = {}
 
@@ -176,17 +189,18 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             Parsing parameters under the "Advanced" section
         """
         ## Kernel settings ##
-        kernelParams = ""
-        kernelType = self.ui.bcpdKernelTypeComboBox.currentIndex
-        if (kernelType == BcpdKernelType.STANDARD.value):
-            selectedKernel = self.ui.bcpdStandardKernelComboBox.currentIndex
-            if selectedKernel != BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE:  # Default kernel is Gauss, which does not need to be specified
-                kernelParams += str(selectedKernel)
+        kernel_params = ""
+        kernel_type = self.ui.bcpdKernelTypeComboBox.currentIndex
+        if (kernel_type == BcpdKernelType.STANDARD.value):
+            selected_kernel = self.ui.bcpdStandardKernelComboBox.currentIndex
+            # Default kernel is Gauss, which does not need to be specified
+            if selected_kernel != BCPD_DEFAULT_VALUE_STANDARD_KERNEL_TYPE:
+                kernel_params += str(selected_kernel)
         else:  # Geodesic Kernel
-            kernelParams += "geodesic" + BCPD_MULTIPLE_VALUES_SEPARATOR
+            kernel_params += "geodesic" + BCPD_MULTIPLE_VALUES_SEPARATOR
 
             tau = self.ui.bcpdGeodesicKernelTauDoubleSpinBox.value
-            kernelParams += str(tau) + BCPD_MULTIPLE_VALUES_SEPARATOR
+            kernel_params += str(tau) + BCPD_MULTIPLE_VALUES_SEPARATOR
 
             if self.ui.bcpdGeodesicKernelInputMeshCheckBox.checked == True:
                 input_mesh_path = self.ui.bcpdGeodesicKernelInputMeshLineEdit.text
@@ -194,14 +208,14 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
                     print("File '" + input_mesh_path +
                           "' does not exist. Cancelling process...")
                     return
-                kernelParams += input_mesh_path
+                kernel_params += input_mesh_path
             else:
-                kernelParams += str(self.ui.bcpdGeodesicKernelNeighboursSpinBox.value) + \
+                kernel_params += str(self.ui.bcpdGeodesicKernelNeighboursSpinBox.value) + \
                     BCPD_MULTIPLE_VALUES_SEPARATOR
-                kernelParams += str(self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value)
+                kernel_params += str(self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value)
 
-        if kernelParams != "":
-            params[BCPD_VALUE_KEY_KERNEL] = kernelParams
+        if kernel_params != "":
+            params[BCPD_VALUE_KEY_KERNEL] = kernel_params
 
         ## Acceleration settings ##
         if self.ui.bcpdAccelerationModeComboBox.currentIndex == BcpdAccelerationMode.AUTOMATIC.value:

@@ -277,10 +277,10 @@
             <bool>true</bool>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="collapsed">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_4">
             <item row="2" column="0" colspan="2">
@@ -501,10 +501,10 @@
             <string>Acceleration</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="collapsed">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <layout class="QFormLayout" name="formLayout_7">
             <item row="1" column="0">

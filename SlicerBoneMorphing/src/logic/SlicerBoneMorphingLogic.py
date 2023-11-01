@@ -19,15 +19,17 @@ from vtk.util.numpy_support import vtk_to_numpy
 import subprocess
 import tempfile
 
-from Constants import *
+from .Constants import *
 
-BCPD_EXEC = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/exec/"
+BCPD_EXEC = os.path.dirname(os.path.abspath(
+    __file__)) + "/../../Resources/BCPD/exec/"
 
 # NOTE: Needs relative path to the main module script
 if platform == "linux" or platform == "linux2":
     BCPD_EXEC += "bcpd_linux_x86_64"
 elif platform == "darwin":
-    BCPD_EXEC += "bcpd_macos_x86_64"  # Slicer is running through Rosetta, so x86 version needs to be used for now
+    # Slicer is running through Rosetta, so x86 version needs to be used for now
+    BCPD_EXEC += "bcpd_macos_x86_64"
 elif platform == "win32":
     BCPD_EXEC += "bcpd_win32.exe"
 
@@ -73,11 +75,11 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         for t in triangles:
             polys.InsertNextCell(3, t)
 
-        vtkPolyData = vtk.vtkPolyData()
-        vtkPolyData.SetPoints(points)
-        vtkPolyData.SetPolys(polys)
+        vtk_poly_data = vtk.vtkPolyData()
+        vtk_poly_data.SetPoints(points)
+        vtk_poly_data.SetPolys(polys)
 
-        return vtkPolyData
+        return vtk_poly_data
 
     def convert_model_to_mesh(self, model: vtkMRMLModelNode):
         """
@@ -91,32 +93,35 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             -------
             open3d.geometry.TriangleMesh
         """
-        vtkPolyData = model.GetPolyData()
+        vtk_poly_data = model.GetPolyData()
 
         # Get vertices from vtk_polydata
-        numpyVertices = vtk_to_numpy(vtkPolyData.GetPoints().GetData())
+        numpy_vertices = vtk_to_numpy(vtk_poly_data.GetPoints().GetData())
 
         # Get normals if present
-        numpyNormals = None
-        modelNormals = vtkPolyData.GetPointData().GetNormals()
-        if (modelNormals is not None):
-            numpyNormals = vtk_to_numpy(vtkPolyData.GetPointData().GetNormals())
+        numpy_normals = None
+        model_normals = vtk_poly_data.GetPointData().GetNormals()
+        if (model_normals is not None):
+            numpy_normals = vtk_to_numpy(
+                vtk_poly_data.GetPointData().GetNormals())
 
         # Get indices (triangles), this would be a (n, 3) shape numpy array where n is the number of triangles.
         # If the vtkPolyData does not represent a valid triangle mesh, the indices may not form valid triangles.
-        numpyIndices = vtk_to_numpy(vtkPolyData.GetPolys().GetData()).reshape(-1, 4)[:, 1:]
+        numpy_indices = vtk_to_numpy(
+            vtk_poly_data.GetPolys().GetData()).reshape(-1, 4)[:, 1:]
 
         # convert numpy array to open3d TriangleMesh
-        open3dMesh = o3d.geometry.TriangleMesh(
-            o3d.utility.Vector3dVector(numpyVertices),
-            o3d.utility.Vector3iVector(numpyIndices))
+        open3d_mesh = o3d.geometry.TriangleMesh(
+            o3d.utility.Vector3dVector(numpy_vertices),
+            o3d.utility.Vector3iVector(numpy_indices))
 
-        if numpyNormals is not None:
-            open3dMesh.vertex_normals = o3d.utility.Vector3dVector(numpyNormals)
+        if numpy_normals is not None:
+            open3d_mesh.vertex_normals = o3d.utility.Vector3dVector(
+                numpy_normals)
 
-        return open3dMesh
+        return open3d_mesh
 
-    def generate_model(self, sourceModel: vtkMRMLModelNode, targetModel: vtkMRMLModelNode, bcpdParameters) -> Tuple[int, vtk.vtkPolyData, vtk.vtkPolyData]:
+    def generate_model(self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode, parameters) -> Tuple[int, vtk.vtkPolyData, vtk.vtkPolyData]:
         """
             Generates new model based on the BCPD algorithm fit between source and target models.
 
@@ -124,7 +129,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             ----------
             vtkMRMLModelNode source_model - source (partial) model to be fit-generated
             vtkMRMLModelNode target_model - model to fit the partial source by.
-            string bcpdParameters - parameters for the BCPD
+            string parameters - parameters for the preprocessing, BCPD and postprocessing
 
             Returns
             -------
@@ -136,60 +141,74 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         NODE_NOT_SELECTED = 0  # Via Slicer documentation
 
-        if (sourceModel == NODE_NOT_SELECTED or targetModel == NODE_NOT_SELECTED):
+        if (source_model == NODE_NOT_SELECTED or target_model == NODE_NOT_SELECTED):
             print("Input or foundation model(s) were not selected")
             return EXIT_FAILURE, None, None
 
-        sourceMesh = self.convert_model_to_mesh(sourceModel)
-        targetMesh = self.convert_model_to_mesh(targetModel)
+        source_mesh = self.convert_model_to_mesh(source_model)
+        target_mesh = self.convert_model_to_mesh(target_model)
 
-        sourcePcd = self.convert_to_point_cloud(sourceMesh)
-        targetPcd = self.convert_to_point_cloud(targetMesh)
+        source_pcd = self.convert_to_point_cloud(source_mesh)
+        target_pcd = self.convert_to_point_cloud(target_mesh)
 
-        print(sourcePcd)
+        print(source_pcd)
 
         # Calculate object size
-        size = np.linalg.norm(np.asarray(targetPcd.get_max_bound()) - np.asarray(targetPcd.get_min_bound()))
-        voxelSize = float(size / VOXEL_SIZE_SCALING)  # the 55 value seems to be too much downscaling
+        size = np.linalg.norm(np.asarray(
+            target_pcd.get_max_bound()) - np.asarray(target_pcd.get_min_bound()))
+        # the 55 value seems to be too much downscaling
+        voxel_size = float(size / VOXEL_SIZE_SCALING)
 
-        sourcePcdDownsampled, sourcePcdFpfh = self.preprocess_point_cloud(sourcePcd, voxelSize)
-        targetPcdDownsampled, targetPcdFpfh = self.preprocess_point_cloud(targetPcd, voxelSize)
+        source_pcd_downsampled, sourcePcdFpfh = self.preprocess_point_cloud(
+            source_pcd, voxel_size)
+        target_pcd_downsampled, targetPcdFpfh = self.preprocess_point_cloud(
+            target_pcd, voxel_size)
 
-        print(sourcePcdDownsampled)
+        print(source_pcd_downsampled)
 
         # Global registration
         try:
-            maxAttempts = 20
-            resultRansac = self.ransac_pcd_registration(sourcePcdDownsampled, targetPcdDownsampled, sourcePcdFpfh, targetPcdFpfh, voxelSize, maxAttempts)
+            max_attempts = 20
+            result_ransac = self.ransac_pcd_registration(
+                source_pcd_downsampled, target_pcd_downsampled, sourcePcdFpfh, targetPcdFpfh, voxel_size, max_attempts)
         except RuntimeError:
-            print("No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
+            print(
+                "No ideal fit was found using the RANSAC algorithm. Please, try to adjust the parameters")
             return EXIT_FAILURE, None, None
 
-        resultIcp = self.refine_registration(sourcePcd, targetPcd, resultRansac, voxelSize)
+        result_icp = self.refine_registration(
+            source_pcd, target_pcd, result_ransac, voxel_size)
 
         # Deformable registration
-        deformed = self.deformable_registration(sourceMesh.transform(resultIcp.transformation), targetMesh, bcpdParameters)
+        deformed = self.deformable_registration(source_mesh.transform(
+            result_icp.transformation), target_mesh, parameters[BCPD_KEY])
         if (deformed == None):
             return EXIT_FAILURE, None, None
         deformed.compute_vertex_normals()
-        targetMesh.compute_vertex_normals()
+        target_mesh.compute_vertex_normals()
 
         # Combine meshes (alternative - to crop the first before merging)
-        combined = deformed + targetMesh
+        combined = deformed + target_mesh
         combined.compute_vertex_normals()
 
         # Simplify mesh (smoothing and filtering)
-        deformedSmp = deformed.simplify_vertex_clustering(voxelSize/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
-        deformedSmp = deformedSmp.filter_smooth_simple(number_of_iterations=SMOOTHING_ITERATIONS)
-        deformedSmp = deformedSmp.filter_smooth_taubin(number_of_iterations=FILTERING_ITEARTIONS)
+        deformed_smp = deformed.simplify_vertex_clustering(
+            voxel_size/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
+        deformed_smp = deformed_smp.filter_smooth_simple(
+            number_of_iterations=SMOOTHING_ITERATIONS)
+        deformed_smp = deformed_smp.filter_smooth_taubin(
+            number_of_iterations=FILTERING_ITEARTIONS)
 
-        meshSmp = combined.simplify_vertex_clustering(voxelSize/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
-        meshSmp = meshSmp.filter_smooth_simple(number_of_iterations=SMOOTHING_ITERATIONS)
-        meshSmp = meshSmp.filter_smooth_taubin(number_of_iterations=FILTERING_ITEARTIONS)
+        mesh_smp = combined.simplify_vertex_clustering(
+            voxel_size/CLUSTERING_VOXEL_SCALING, contraction=o3d.geometry.SimplificationContraction.Average)
+        mesh_smp = mesh_smp.filter_smooth_simple(
+            number_of_iterations=SMOOTHING_ITERATIONS)
+        mesh_smp = mesh_smp.filter_smooth_taubin(
+            number_of_iterations=FILTERING_ITEARTIONS)
         # mesh_smp.compute_vertex_normals() # TODO: Is this needed?
 
-        generated_polydata = self.convert_mesh_to_vtk_polydata(deformedSmp)
-        merged_polydata = self.convert_mesh_to_vtk_polydata(meshSmp)
+        generated_polydata = self.convert_mesh_to_vtk_polydata(deformed_smp)
+        merged_polydata = self.convert_mesh_to_vtk_polydata(mesh_smp)
 
         return EXIT_OK, generated_polydata, merged_polydata
 
@@ -215,7 +234,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         return pcd
 
-    def preprocess_point_cloud(self, pcd: o3d.geometry.PointCloud, voxelSize: float) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Features]:
+    def preprocess_point_cloud(self, pcd: o3d.geometry.PointCloud, voxelSize: float) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Feature]:
         ''' 
             Perform downsampling of a mesh, normal estimation and computing FPFH feature of the point cloud.
 
@@ -225,27 +244,30 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     FPFH: open3d.pipelines.registration.Feature]
         '''
 
-        radiusNormal = voxelSize * RADIUS_NORMAL_SCALING
-        radiusFeature = voxelSize * RADIUS_FEATURE_SCALING
+        radius_normal = voxelSize * RADIUS_NORMAL_SCALING
+        radius_feature = voxelSize * RADIUS_FEATURE_SCALING
 
         print("Downsampling mesh with a voxel size %.3f." % voxelSize)
-        pcdDown: o3d.geometry.PointCloud = pcd.voxel_down_sample(voxelSize)
+        pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(
+            voxelSize)
 
-        print("Estimating normal with search radius %.3f." % radiusNormal)
-        pcdDown.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=radiusNormal, max_nn=MAX_NN_NORMALS))
+        print("Estimating normal with search radius %.3f." % radius_normal)
+        pcd_downsampled.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
+            radius=radius_normal, max_nn=MAX_NN_NORMALS))
 
-        print("Compute FPFH feature with search radius %.3f." % radiusFeature)
-        pcdFpfh = o3d.pipelines.registration.compute_fpfh_feature(pcdDown, o3d.geometry.KDTreeSearchParamHybrid(radius=radiusFeature, max_nn=MAX_NN_FPFH))
+        print("Compute FPFH feature with search radius %.3f." % radius_feature)
+        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
+            pcd_downsampled, o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature, max_nn=MAX_NN_FPFH))
 
-        return pcdDown, pcdFpfh
+        return pcd_downsampled, pcd_fpfh
 
     def ransac_pcd_registration(self,
-                                sourcePcdDown: o3d.geometry.PointCloud,
-                                targetPcdDown: o3d.geometry.PointCloud,
-                                sourceFpfh: o3d.pipelines.registration.Feature,
-                                targetFpfh: o3d.pipelines.registration.Feature,
-                                voxelSize: float,
-                                ransacMaxAttempts: int) -> o3d.pipelines.registration.RegistrationResult:
+                                source_pcd_down: o3d.geometry.PointCloud,
+                                target_pcd_down: o3d.geometry.PointCloud,
+                                source_fpfh: o3d.pipelines.registration.Feature,
+                                target_fpfh: o3d.pipelines.registration.Feature,
+                                voxel_size: float,
+                                ransac_max_attempts: int) -> o3d.pipelines.registration.RegistrationResult:
         ''' Perform a registration of nearest neighbourgs using the RANSAC algorithm.
             Distance threshold will be set as 1.5 times the voxel size.
 
@@ -263,36 +285,41 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             Best PCD fit: open3d.pipelines.registration.RegistrationResult
 
         '''
-        distanceThreshold = voxelSize * 1.5
+        distance_threshold = voxel_size * 1.5
         fitness = 0
         count = 0
-        bestResult = None
-        fitnessMin, fitnessMax = 0.999, 1
+        best_result = None
+        fitness_min, fitness_max = 0.999, 1
 
-        while (fitness < fitnessMin and fitness < fitnessMax and count < ransacMaxAttempts):
+        while (fitness < fitness_min and fitness < fitness_max and count < ransac_max_attempts):
             result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
-                sourcePcdDown,
-                targetPcdDown,
-                sourceFpfh,
-                targetFpfh,
+                source_pcd_down,
+                target_pcd_down,
+                source_fpfh,
+                target_fpfh,
                 True,
-                distanceThreshold,
-                o3d.pipelines.registration.TransformationEstimationPointToPoint(True),
+                distance_threshold,
+                o3d.pipelines.registration.TransformationEstimationPointToPoint(
+                    True),
                 3,
                 [
-                    o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
-                    o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distanceThreshold)
+                    o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(
+                        0.9),
+                    o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
+                        distance_threshold)
                 ],
-                o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999)  # NOTE: JH - Would this not make a good fit? Why is the outer loop neccessary?
+                # NOTE: JH - Would this not make a good fit? Why is the outer loop neccessary?
+                o3d.pipelines.registration.RANSACConvergenceCriteria(
+                    100000, 0.999)
             )
             if result.fitness > fitness and result.fitness < 1:
                 fitness = result.fitness
-                bestResult = result
+                best_result = result
             count += 1
-        return bestResult
+        return best_result
 
-    def refine_registration(self, sourcePcdDown: o3d.geometry.PointCloud,
-                            targetPcdDown: o3d.geometry.PointCloud,
+    def refine_registration(self, source_pcd_down: o3d.geometry.PointCloud,
+                            target_pcd_down: o3d.geometry.PointCloud,
                             ransacResult: o3d.pipelines.registration.RegistrationResult,
                             voxelSize: float) -> o3d.pipelines.registration.RegistrationResult:
         ''' Perform a point-clouds' registration refinement.
@@ -309,21 +336,23 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         '''
         distance_threshold = voxelSize * 0.4
 
-        sourcePcdDown.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxelSize * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
-        targetPcdDown.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxelSize * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
+        source_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
+            radius=voxelSize * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
+        target_pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
+            radius=voxelSize * RADIUS_NORMAL_SCALING, max_nn=MAX_NN_NORMALS))
 
         print(":: Point-to-plane ICP registration is applied on original point")
         print("   clouds to refine the alignment. This time we use a strict")
         print("   distance threshold %.3f." % distance_threshold)
         result = o3d.pipelines.registration.registration_icp(
-            sourcePcdDown,
-            targetPcdDown,
+            source_pcd_down,
+            target_pcd_down,
             distance_threshold,
             ransacResult.transformation,
             o3d.pipelines.registration.TransformationEstimationPointToPlane())
         return result
 
-    def deformable_registration(self, sourcePcd: o3d.geometry.PointCloud, targetPcd: o3d.geometry.PointCloud, bcpdParameters) -> o3d.geometry.TriangleMesh:
+    def deformable_registration(self, source_pcd: o3d.geometry.PointCloud, target_pcd: o3d.geometry.PointCloud, bcpd_parameters) -> o3d.geometry.TriangleMesh:
         """
             Perform a BCPD deformable registration from the source point cloud to the target point cloud
 
@@ -337,33 +366,34 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             -------
             o3d.geometry.TriangleMesh representing the new deformed mesh 
         """
-        sourceArray = np.asarray(sourcePcd.vertices, dtype=np.float32)
-        targetArray = np.asarray(targetPcd.vertices, dtype=np.float32)
+        source_array = np.asarray(source_pcd.vertices, dtype=np.float32)
+        target_array = np.asarray(target_pcd.vertices, dtype=np.float32)
 
-        targetPath = tempfile.gettempdir() + '/slicer_bone_morphing_target.txt'
-        sourcePath = tempfile.gettempdir() + '/slicer_bone_morphing_source.txt'
-        outputPath = tempfile.gettempdir() + '/output_'
+        target_path = tempfile.gettempdir() + '/slicer_bone_morphing_target.txt'
+        source_path = tempfile.gettempdir() + '/slicer_bone_morphing_source.txt'
+        output_path = tempfile.gettempdir() + '/output_'
 
-        np.savetxt(targetPath, targetArray, delimiter=',')
-        np.savetxt(sourcePath, sourceArray, delimiter=',')
+        np.savetxt(target_path, target_array, delimiter=',')
+        np.savetxt(source_path, source_array, delimiter=',')
 
-        cmd = f'{BCPD_EXEC} -h -x {targetPath} -y {sourcePath} {bcpdParameters} -o {outputPath}'
+        cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path} {bcpd_parameters} -o {output_path}'
 
-        subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
+        subprocess.run(cmd, shell=True, check=True,
+                       text=True, capture_output=True)
 
         try:
-            bcpdResult = np.loadtxt(outputPath + "y.interpolated.txt")
+            bcpdResult = np.loadtxt(output_path + "y.interpolated.txt")
         except FileNotFoundError:
             print("No results generated by BCPD. Refer to the output in the console.")
             return None
 
-        for fl in glob.glob(outputPath + "*.txt"):
+        for fl in glob.glob(output_path + "*.txt"):
             os.remove(fl)
-        os.remove(targetPath)
-        os.remove(sourcePath)
+        os.remove(target_path)
+        os.remove(source_path)
 
         deformed = o3d.geometry.TriangleMesh()
         deformed.vertices = o3d.utility.Vector3dVector(np.asarray(bcpdResult))
-        deformed.triangles = sourcePcd.triangles
+        deformed.triangles = source_pcd.triangles
 
         return deformed
