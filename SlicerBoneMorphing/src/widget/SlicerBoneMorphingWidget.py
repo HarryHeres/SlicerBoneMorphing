@@ -162,6 +162,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
     def parse_parameters_preprocessing(self) -> dict:
         params = {}
+        params[PREPROCESSING_KEY_VOXEL_SIZE_SCALING] = self.ui.parametersVoxelSizeScalingDoubleSpinBox.value
 
         return params
 

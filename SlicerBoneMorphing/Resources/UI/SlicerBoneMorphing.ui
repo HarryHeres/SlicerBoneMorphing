@@ -93,17 +93,55 @@
      </property>
      <layout class="QFormLayout" name="formLayout_16">
       <item row="0" column="0">
-       <widget class="QLabel" name="preprocessingVoxelScalingLabel">
+       <widget class="QLabel" name="preprocessingVoxelSizeScalingLabel">
+        <property name="toolTip">
+         <string>The higher the number, the lower the distance threshold for a neighbour point to be considered</string>
+        </property>
         <property name="text">
-         <string>Voxel scaling:</string>
+         <string>Voxel size scaling:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <widget class="QDoubleSpinBox" name="preprocessingVoxelSizeScalingDoubleSpinBox">
+        <property name="toolTip">
+         <string>The higher the number, the lower the distance threshold for the RANSAC registration</string>
+        </property>
         <property name="maximum">
          <double>100.000000000000000</double>
         </property>
+        <property name="value">
+         <double>55.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>GroupBox</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_17">
+         <item row="0" column="0">
+          <widget class="QLabel" name="preprocessingRansacMaxIterationsLabel">
+           <property name="toolTip">
+            <string>The higher the number, the longer the registration process will take, but higher the chance to converge to a fit solution</string>
+           </property>
+           <property name="text">
+            <string>RANSAC Max Iterations: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="preprocessingRansacMaxAttemptsSpinBox">
+           <property name="toolTip">
+            <string>The higher the number, the longer the registration process will take, but higher the chance to converge to a fit solution</string>
+           </property>
+           <property name="value">
+            <number>30</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
