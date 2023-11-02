@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>564</width>
-    <height>775</height>
+    <height>912</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -91,53 +91,179 @@
      <property name="text">
       <string>Preprocessing parameters</string>
      </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
      <layout class="QFormLayout" name="formLayout_16">
-      <item row="0" column="0">
-       <widget class="QLabel" name="preprocessingVoxelSizeScalingLabel">
-        <property name="toolTip">
-         <string>The higher the number, the lower the distance threshold for a neighbour point to be considered</string>
-        </property>
-        <property name="text">
-         <string>Voxel size scaling:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="preprocessingVoxelSizeScalingDoubleSpinBox">
-        <property name="toolTip">
-         <string>The higher the number, the lower the distance threshold for the RANSAC registration</string>
-        </property>
-        <property name="maximum">
-         <double>100.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>55.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QGroupBox" name="groupBox">
+      <item row="0" column="0" colspan="2">
+       <widget class="QGroupBox" name="preprocessingPcdGroupBox">
         <property name="title">
-         <string>GroupBox</string>
+         <string>Point cloud preprocessing</string>
         </property>
         <layout class="QFormLayout" name="formLayout_17">
          <item row="0" column="0">
-          <widget class="QLabel" name="preprocessingRansacMaxIterationsLabel">
+          <widget class="QLabel" name="preprocessingDownsamplingDistanceThresholdLabel">
            <property name="toolTip">
-            <string>The higher the number, the longer the registration process will take, but higher the chance to converge to a fit solution</string>
+            <string>The higher the number, the lower the distance threshold for a neighbour point to be considered</string>
            </property>
            <property name="text">
-            <string>RANSAC Max Iterations: </string>
+            <string>Downsampling distance threshold:</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSpinBox" name="preprocessingRansacMaxAttemptsSpinBox">
+          <widget class="QDoubleSpinBox" name="preprocessingDownsamplingDistanceThresholdDoubleSpinBox">
+           <property name="toolTip">
+            <string>The higher the number, the lower the distance threshold for the RANSAC registration</string>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>55.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="preprocessingNormalsEstimationRadiusLabel">
+           <property name="text">
+            <string>Normals estimation radius: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="preprocessingNormalsEstimationRadiusDoubleSpinBox">
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>4.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="preprocessingNormalsEstimationMaxNeighboursLabel">
+           <property name="text">
+            <string>Normals estimation max neighbours:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="preprocessingNormalsEstimationMaxNeighboursSpinBox"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="preprocessingFpfhRadiusLabel">
+           <property name="text">
+            <string>FPFH search radius:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="preprocessingFpfhRadiusDoubleSpinBox">
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="preprocessingFpfhMaxNeighboursLabel">
+           <property name="text">
+            <string>FPFH max neighbours:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QSpinBox" name="preprocessingFpfhMaxNeighboursSpinBox"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="registrationGroupBox">
+        <property name="title">
+         <string>Registration</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_18">
+         <item row="1" column="0">
+          <widget class="QLabel" name="registrationDistanceThresholdLabel">
+           <property name="text">
+            <string>Distance threshold:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="registrationDistanceThresholdDoubleSpinBox">
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="registrationMaxIterationsLabel">
            <property name="toolTip">
             <string>The higher the number, the longer the registration process will take, but higher the chance to converge to a fit solution</string>
            </property>
+           <property name="text">
+            <string>Max iterations:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="registrationMaxIterationsSpinBox">
+           <property name="toolTip">
+            <string>The higher the number, the longer the registration process will take, but higher the chance to converge to a fit solution</string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
            <property name="value">
             <number>30</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="registrationFitnessThresholdLabel">
+           <property name="text">
+            <string>Fitness threshold:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="registrationFitnessThresholdDoubleSpinBox">
+           <property name="decimals">
+            <number>8</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.000100000000000</double>
+           </property>
+           <property name="value">
+            <double>0.999000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="registrationIcpDistanceThresholdLabel">
+           <property name="text">
+            <string>ICP Distance threshold:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="registrationIcpDistanceThresholdDoubleSpinBox">
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -944,14 +1070,14 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="0" colspan="2">
-       <widget class="QPushButton" name="bcpdResetParametersPushButton">
-        <property name="text">
-         <string>Reset parameters to default</string>
-        </property>
-       </widget>
-      </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="bcpdResetParametersPushButton">
+     <property name="text">
+      <string>Reset parameters to default</string>
+     </property>
     </widget>
    </item>
    <item>

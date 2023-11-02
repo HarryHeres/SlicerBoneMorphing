@@ -43,12 +43,12 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
         self.ui.bcpdAdvancedControlsGroupBox.setVisible(False)
 
-        self.setup_combo_box(self.ui.bcpdKernelTypeComboBox,
-                             BcpdKernelType, self.show_kernel_type)
+        self.setup_combo_box(self.ui.bcpdKernelTypeComboBox, BcpdKernelType,
+                             self.show_kernel_type)
         self.ui.bcpdGeodesicKernelGroupBox.setVisible(False)
 
-        self.setup_combo_box(
-            self.ui.bcpdStandardKernelComboBox, BcpdStandardKernel, None)
+        self.setup_combo_box(self.ui.bcpdStandardKernelComboBox,
+                             BcpdStandardKernel, None)
 
         self.setup_combo_box(self.ui.bcpdAccelerationModeComboBox,
                              BcpdAccelerationMode, self.show_acceleration_mode)
@@ -67,6 +67,19 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.ui.generateModelButton.clicked.connect(self.generate_model)
 
     def reset_parameters_to_default(self):
+        ## Preprocessing parameters ##
+        self.ui.preprocessingDownsamplingDistanceThresholdDoubleSpinBox.value = PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_DISTANCE_THRESHOLD
+        self.ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = PREPROCESSING_DEFAULT_VALUE_RADIUS_NORMAL_SCALE
+        self.ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = PREPROCESSING_DEFAULT_VALUE_MAX_NN_NORMALS
+        self.ui.preprocessingFpfhRadiusDoubleSpinBox.value = PREPROCESSING_DEFAULT_VALUE_RADIUS_FEATURE_SCALE
+        self.ui.preprocessingFpfhMaxNeighboursSpinBox.value = PREPROCESSING_DEFAULT_VALUE_MAX_NN_FPFH
+
+        ## Registration parameters ##
+        self.ui.registrationMaxIterationsSpinBox.value = REGISTRATION_DEFAULT_VALUE_MAX_ITERATIONS
+        self.ui.registrationDistanceThresholdDoubleSpinBox.value = REGISTRATION_DEFAULT_VALUE_DISTANCE_THRESHOLD
+        self.ui.registrationFitnessThresholdDoubleSpinBox.value = REGISTRATION_DEFAULT_VALUE_FITNESS_THRESHOLD
+        self.ui.registrationIcpDistanceThresholdDoubleSpinBox.value = REGISTRATION_DEFAULT_VALUE_ICP_DISTANCE_THRESHOLD
+
         ## Tuning parameters ##
         self.ui.bcpdOmegaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_OMEGA
         self.ui.bcpdLambdaDoubleSpinBox.value = BCPD_DEFAULT_VALUE_LAMBDA
@@ -162,7 +175,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
     def parse_parameters_preprocessing(self) -> dict:
         params = {}
-        params[PREPROCESSING_KEY_VOXEL_SIZE_SCALING] = self.ui.parametersVoxelSizeScalingDoubleSpinBox.value
 
         return params
 
@@ -215,7 +227,8 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             else:
                 kernel_params += str(self.ui.bcpdGeodesicKernelNeighboursSpinBox.value) + \
                     BCPD_MULTIPLE_VALUES_SEPARATOR
-                kernel_params += str(self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value)
+                kernel_params += str(
+                    self.ui.bcpdGeodesicKernelRadiusDoubleSpinBox.value)
 
         if kernel_params != "":
             params[BCPD_VALUE_KEY_KERNEL] = kernel_params
@@ -233,28 +246,40 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
                 params[BCPD_VALUE_KEY_DOWNSAMPLING] = "B,10000,0.08"
         else:  # Manual acceleration
             if self.ui.bcpdAccelerationManualNystormGroupBox.checked == True:
-                params[BCPD_VALUE_KEY_NYSTORM_G] = self.ui.bcpdAccelerationManualNystormGSpinBox.value
-                params[BCPD_VALUE_KEY_NYSTORM_P] = self.ui.bcpdAccelerationManualNystormJSpinBox.value
-                params[BCPD_VALUE_KEY_NYSTORM_R] = self.ui.bcpdAccelerationManualNystormRSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_NYSTORM_G] = self.ui.bcpdAccelerationManualNystormGSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_NYSTORM_P] = self.ui.bcpdAccelerationManualNystormJSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_NYSTORM_R] = self.ui.bcpdAccelerationManualNystormRSpinBox.value
             if self.ui.bcpdAccelerationManualKdTreeGroupBox.checked == True:
                 # Option switch without a value
                 params[BCPD_VALUE_KEY_KD_TREE] = ""
-                params[BCPD_VALUE_KEY_KD_TREE_SCALE] = self.ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value
-                params[BCPD_VALUE_KEY_KD_TREE_RADIUS] = self.ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value
-                params[BCPD_VALUE_KEY_KD_TREE_THRESHOLD] = self.ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_KD_TREE_SCALE] = self.ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_KD_TREE_RADIUS] = self.ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value
+                params[
+                    BCPD_VALUE_KEY_KD_TREE_THRESHOLD] = self.ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value
 
         ## Downsampling settings ##
 
         if params.get(BCPD_VALUE_KEY_DOWNSAMPLING) is None:
-            params[BCPD_VALUE_KEY_DOWNSAMPLING] = self.ui.bcpdDownsamplingLineEdit.text
+            params[
+                BCPD_VALUE_KEY_DOWNSAMPLING] = self.ui.bcpdDownsamplingLineEdit.text
 
         ## Convergence options ##
-        params[BCPD_VALUE_KEY_CONVERGENCE_TOLERANCE] = self.ui.bcpdConvergenceToleranceDoubleSpinBox.value
-        params[BCPD_VALUE_KEY_CONVERGENCE_MIN_ITERATIONS] = self.ui.bcpdConvergenceMinIterationsSpinBox.value
-        params[BCPD_VALUE_KEY_CONVERGENCE_MAX_ITERATIONS] = self.ui.bcpdConvergenceMaxIterationsSpinBox.value
+        params[
+            BCPD_VALUE_KEY_CONVERGENCE_TOLERANCE] = self.ui.bcpdConvergenceToleranceDoubleSpinBox.value
+        params[
+            BCPD_VALUE_KEY_CONVERGENCE_MIN_ITERATIONS] = self.ui.bcpdConvergenceMinIterationsSpinBox.value
+        params[
+            BCPD_VALUE_KEY_CONVERGENCE_MAX_ITERATIONS] = self.ui.bcpdConvergenceMaxIterationsSpinBox.value
 
         ## Normalization options ##
-        params[BCPD_VALUE_KEY_NORMALIZATION] = self.ui.bcpdNormalizationComboBox.currentText.lower()
+        params[
+            BCPD_VALUE_KEY_NORMALIZATION] = self.ui.bcpdNormalizationComboBox.currentText.lower(
+            )
 
     def generate_model(self) -> None:
         """
@@ -263,7 +288,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params = self.parse_parameters()
         params_string = ""
         for key in params.keys():
-            params_string += key + str(params[key]) "\n"
+            params_string += key + str(params[key]) + "\n"
         print("Parameters: " + params_string)
 
         # err, generated_polydata, merged_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode(), params_string)

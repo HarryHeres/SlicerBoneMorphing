@@ -88,8 +88,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         if (deformed == None):
             return EXIT_FAILURE, None, None
 
-        self.postprocess_result_mesh(deformed)
-
         return EXIT_OK, generated_polydata, merged_polydata
 
     def convert_mesh_to_vtk_polydata(
@@ -189,10 +187,10 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
     def preprocess_model(
         self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode,
-        parameters
+        parameters: dict
     ) -> Tuple[int, o3d.pipelines.registration.RegistrationResult]:
         """
-            Preprocess model before advancing into the generation (BCPD) stage. This method converts the input models into respective point clouds, then performs RANSAC best fit transformation from source to target and returns a refined registration result
+            Preprocess model before advancing into the generation (BCPD) stage. This method converts the input models into respective point clouds, then performs RANSAC best fit transformation from source to target and returns the result
 
             Parameters
             ----------
@@ -207,41 +205,60 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         source_pcd = self.convert_to_point_cloud(source_mesh)
         target_pcd = self.convert_to_point_cloud(target_mesh)
 
-        # Calculate object size
-        voxel_size_diff = np.linalg.norm(
-            np.asarray(target_pcd.get_max_bound()) -
-            np.asarray(target_pcd.get_min_bound()))
-
-        distance_threshold = float(
-            voxel_size_diff / parameters[PREPROCESSING_KEY_VOXEL_SIZE_SCALING])
-
         source_pcd_downsampled, source_pcd_fpfh = self.preprocess_point_cloud(
-            source_pcd, distance_threshold)
+            source_pcd,
+            parameters[PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD],
+            parameters[PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
+            parameters[PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
+            parameters[PREPROCESSING_KEY_MAX_NN_NORMALS],
+            parameters[PREPROCESSING_KEY_MAX_NN_FPFH])
+
         target_pcd_downsampled, target_pcd_fpfh = self.preprocess_point_cloud(
-            target_pcd, distance_threshold)
+            target_pcd,
+            parameters[PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD],
+            parameters[PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
+            parameters[PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
+            parameters[PREPROCESSING_KEY_MAX_NN_NORMALS],
+            parameters[PREPROCESSING_KEY_MAX_NN_FPFH])
 
         try:
             result_ransac = self.ransac_pcd_registration(
                 source_pcd_downsampled, target_pcd_downsampled,
-                source_pcd_fpfh, target_pcd_fpfh, distance_threshold,
-                parameters[PREPROCESSING_RANSAC_MAX_ATTEMPTS])
+                source_pcd_fpfh, target_pcd_fpfh,
+                parameters[REGISTRATION_KEY_DISTANCE_THRESHOLD],
+                parameters[REGISTRATION_KEY_FITNESS_THRESHOLD],
+                parameters[REGISTRATION_KEY_MAX_ITERATIONS])
         except RuntimeError:
             print(
                 "No ideal fit was found using the RANSAC algorithm. Please, try adjusting the parameters"
             )
             return EXIT_FAILURE, None
 
-        result_icp = self.refine_registration(source_pcd, target_pcd,
-                                              result_ransac,
-                                              distance_threshold)
+        result_icp = o3d.pipelines.registration.registration_icp(
+            source_pcd_downsampled, target_pcd_downsampled,
+            parameters[REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD],
+            ransac_result.transformation,
+            o3d.pipelines.registration.TransformationEstimationPointToPlane())
 
         return EXIT_OK, result_icp
 
     def preprocess_point_cloud(
-        self, pcd: o3d.geometry.PointCloud, distance_threshold: float
+        self, pcd: o3d.geometry.PointCloud,
+        downsampling_distance_threshold: float,
+        normals_estimation_radius: float, fpfh_estimation_radius: float,
+        max_nn_normals: int, max_nn_fpfh: int
     ) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Feature]:
         ''' 
             Perform downsampling of a mesh, normal estimation and computing FPFH feature of the point cloud.
+
+            Parameters
+            ----------
+            o3d.geometry.PointCloud pcd: Source point cloud
+            float downsampling_distance_threshold: Distance threshold for downsampling
+            float normals_estimation_radius: Radius for estimating normals 
+            float fpfh_estimation_radius: Radius for the FPFH computation
+            int max_nn_normals: Maximum number of neighbours considered for normals estimation
+            int max_nn_fpfh: Maximum number of neighbours considered for the FPFH calculation
 
             Returns
             -------
@@ -249,23 +266,22 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     FPFH: open3d.pipelines.registration.Feature]
         '''
 
-        radius_normal = distance_threshold * RADIUS_NORMAL_SCALING
-        radius_feature = distance_threshold * RADIUS_FEATURE_SCALING
-
-        print("Downsampling mesh with a %.3f." % distance_threshold)
+        print("Downsampling mesh with a %.3f." %
+              downsampling_distance_threshold)
         pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(
-            distance_threshold)
+            downsampling_distance_threshold)
 
         print("Estimating normal with search radius %.3f." % radius_normal)
         pcd_downsampled.estimate_normals(
-            o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normal,
-                                                 max_nn=MAX_NN_NORMALS))
+            o3d.geometry.KDTreeSearchParamHybrid(
+                radius=normals_estimation_radius, max_nn=max_nn_normals))
 
-        print("Compute FPFH feature with search radius %.3f." % radius_feature)
+        print("Calculating FPFH feature with search radius %.3f." %
+              radius_feature)
         pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
             pcd_downsampled,
-            o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature,
-                                                 max_nn=MAX_NN_FPFH))
+            o3d.geometry.KDTreeSearchParamHybrid(radius=fpfh_estimation_radius,
+                                                 max_nn=max_nn_fpfh))
 
         return pcd_downsampled, pcd_fpfh
 
@@ -276,19 +292,21 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         source_fpfh: o3d.pipelines.registration.Feature,
         target_fpfh: o3d.pipelines.registration.Feature,
         distance_threshold: float,
-        ransac_max_attempts: int,
+        fitness_threshold: float,
+        max_iterations: int,
     ) -> o3d.pipelines.registration.RegistrationResult:
         ''' Perform a registration of nearest neighbours using the RANSAC algorithm.
             Distance threshold will be set as the voxel difference.
 
             Parameters
             ----------
-            source_pcd_down: Downsampled SOURCE point cloud
-            target_pcd_down: Downsampled TARGET point cloud
-            source_fpfh: Source PCD Fast-Point-Feature-Histogram
-            target_fpfh: Target PCD Fast-Point-Feature-Histogram
-            distance_threshold: Threshold in which a near point is considered a neighbour
-            ransac_max_attempts: Maximum number of iterations of the RANSAC algorithm
+            o3d.geometry.PointCloud source_pcd_down: Downsampled SOURCE point cloud
+            o3d.geometry.PointCloud target_pcd_down: Downsampled TARGET point cloud
+            o3d.pipelines.registration.Feature source_fpfh: Source PCD Fast-Point-Feature-Histogram
+            o3d.pipelines.registration.Feature target_fpfh: Target PCD Fast-Point-Feature-Histogram
+            float distance_threshold: Threshold in which a near point is considered a neighbour
+            float fitness_threshold: Minimal value for iterations until it is reached
+            max_iterations: Maximum number of iterations of the RANSAC algorithm
 
             Returns
             -------
@@ -298,10 +316,10 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         fitness = 0
         count = 0
         best_result = None
-        fitness_min, fitness_max = 0.999, 1
+        fitness_max = 1
 
         while (fitness < fitness_min and fitness < fitness_max
-               and count < ransac_max_attempts):
+               and count < max_attempts):
             result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
                 source_pcd_down,
                 target_pcd_down,
@@ -326,39 +344,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 best_result = result
             count += 1
         return best_result
-
-    def refine_registration(
-        self, source_pcd_down: o3d.geometry.PointCloud,
-        target_pcd_down: o3d.geometry.PointCloud,
-        ransacResult: o3d.pipelines.registration.RegistrationResult,
-        distance_threshold: float
-    ) -> o3d.pipelines.registration.RegistrationResult:
-        ''' Perform a point-clouds' registration refinement.
-
-            Parameters
-            ----------
-            source_down: Downsampled SOURCE point cloud
-            target_down: Downsampled TARGET point cloud
-            source_fpfh: Source PCD Fast-Point-Feature-Histogram
-            target_fpfh: Target PCD Fast-Point-Feature-Histogram
-            distance_threshold: Threshold in which a point is considered a neighbour
-
-        '''
-        source_pcd_down.estimate_normals(
-            o3d.geometry.KDTreeSearchParamHybrid(radius=distance_threshold *
-                                                 RADIUS_NORMAL_SCALING,
-                                                 max_nn=MAX_NN_NORMALS))
-        target_pcd_down.estimate_normals(
-            o3d.geometry.KDTreeSearchParamHybrid(radius=distance_threshold *
-                                                 RADIUS_NORMAL_SCALING,
-                                                 max_nn=MAX_NN_NORMALS))
-
-        result = o3d.pipelines.registration.registration_icp(
-            source_pcd_down, target_pcd_down, distance_threshold,
-            ransacResult.transformation,
-            o3d.pipelines.registration.TransformationEstimationPointToPlane())
-
-        return result
 
     def deformable_registration(self, source_pcd: o3d.geometry.PointCloud,
                                 target_pcd: o3d.geometry.PointCloud,
