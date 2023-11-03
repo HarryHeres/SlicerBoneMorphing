@@ -75,7 +75,10 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             print("Input or foundation model(s) were not selected")
             return EXIT_FAILURE, None, None
 
-        err, result_icp = self.preprocess_model(source_model, target_model,
+        source_mesh = self.convert_model_to_mesh(source_model)
+        target_mesh = self.convert_model_to_mesh(target_model)
+
+        err, result_icp = self.preprocess_model(source_mesh, target_mesh,
                                                 parameters[PREPROCESSING_KEY])
         if err == EXIT_FAILURE:
             print("Cannot continue with generating. Aborting...")
@@ -87,6 +90,9 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             parameters[BCPD_KEY])
         if (deformed == None):
             return EXIT_FAILURE, None, None
+
+        generated_polydata, merged_polydata = self.postprocess_data(
+            deformed, target_mesh, parameters[POSTPROCESSING_KEY])
 
         return EXIT_OK, generated_polydata, merged_polydata
 
@@ -186,21 +192,21 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         return pcd
 
     def preprocess_model(
-        self, source_model: vtkMRMLModelNode, target_model: vtkMRMLModelNode,
-        parameters: dict
+        self, source_mesh: o3d.geometry.TriangleMesh,
+        target_mesh: o3d.geometry.TriangleMesh, parameters: dict
     ) -> Tuple[int, o3d.pipelines.registration.RegistrationResult]:
         """
             Preprocess model before advancing into the generation (BCPD) stage. This method converts the input models into respective point clouds, then performs RANSAC best fit transformation from source to target and returns the result
 
             Parameters
             ----------
-            vtkMRMLModelNode source_model: Source MRML model
-            vtkMRMLModelNode target_model: Target MRML model
+            o3d.geometry.TriangleMesh source_mesh: Source MRML model
+            o3d.geometry.TriangleMesh target_mesh: Target MRML model
 
-
+            Returns
+            -------
+            Tuple[int, o3d.pipelines.registration.RegistrationResult] - if Tuple[0] equals EXIT_OK, then Tuple[1] will carry the registration result
         """
-        source_mesh = self.convert_model_to_mesh(source_model)
-        target_mesh = self.convert_model_to_mesh(target_model)
 
         source_pcd = self.convert_to_point_cloud(source_mesh)
         target_pcd = self.convert_to_point_cloud(target_mesh)
@@ -237,7 +243,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         result_icp = o3d.pipelines.registration.registration_icp(
             source_pcd_downsampled, target_pcd_downsampled,
             parameters[REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD],
-            ransac_result.transformation,
+            result_ransac.transformation,
             o3d.pipelines.registration.TransformationEstimationPointToPlane())
 
         return EXIT_OK, result_icp
@@ -266,18 +272,13 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     FPFH: open3d.pipelines.registration.Feature]
         '''
 
-        print("Downsampling mesh with a %.3f." %
-              downsampling_distance_threshold)
         pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(
             downsampling_distance_threshold)
 
-        print("Estimating normal with search radius %.3f." % radius_normal)
         pcd_downsampled.estimate_normals(
             o3d.geometry.KDTreeSearchParamHybrid(
                 radius=normals_estimation_radius, max_nn=max_nn_normals))
 
-        print("Calculating FPFH feature with search radius %.3f." %
-              radius_feature)
         pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
             pcd_downsampled,
             o3d.geometry.KDTreeSearchParamHybrid(radius=fpfh_estimation_radius,
@@ -318,8 +319,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         best_result = None
         fitness_max = 1
 
-        while (fitness < fitness_min and fitness < fitness_max
-               and count < max_attempts):
+        while (fitness < fitness_threshold and fitness < fitness_max
+               and count < max_iterations):
             result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
                 source_pcd_down,
                 target_pcd_down,
@@ -336,9 +337,9 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     o3d.pipelines.registration.
                     CorrespondenceCheckerBasedOnDistance(distance_threshold)
                 ],
-                # NOTE: JH - Would this not make a good fit? Why is the outer loop neccessary?
+                # NOTE: Just for earlier termination, but still needs the outer loop for proper convergence
                 o3d.pipelines.registration.RANSACConvergenceCriteria(
-                    100000, 0.999))
+                    100000, fitness_threshold))
             if result.fitness > fitness and result.fitness < 1:
                 fitness = result.fitness
                 best_result = result
@@ -373,7 +374,13 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         np.savetxt(target_path, target_array, delimiter=',')
         np.savetxt(source_path, source_array, delimiter=',')
 
-        cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path} {bcpd_parameters} -o {output_path}'
+        cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path}'
+
+        for key in bcpd_parameters.keys():
+            cmd += f' {key}{bcpd_parameters[key]}'
+
+        cmd += f' -o {output_path}'
+        print("BCPD: " + cmd)
 
         subprocess.run(cmd,
                        shell=True,
@@ -399,3 +406,56 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         deformed.triangles = source_pcd.triangles
 
         return deformed
+
+    def postprocess_data(
+            self, deformed: o3d.geometry.TriangleMesh,
+            target_mesh: o3d.geometry.TriangleMesh,
+            parameters: dict) -> Tuple[vtk.vtkPolyData, vtk.vtkPolyData]:
+        """
+            Perform a postprocessing (smoothing and filtering) of the result of the BCPD algorithm
+
+            Parameters
+            ----------
+            o3d.geometry.TriangleMesh deformed: BCPD result mesh
+            o3d.geometry.TriangleMesh target_mesh: Target model mesh
+            dict parameters: parameters dict for the postprocessing stage
+
+            Returns
+            -------
+            Tuple[vtk.vtkPolyData, vtk.vtkPolyData]: Tuple[0] will represent the postprocessed BCPD mesh, Tuple[1] will represent the COMBINED mesh (i.e. BCPD result merged with the target mesh)
+
+        """
+        deformed.compute_vertex_normals()
+        target_mesh.compute_vertex_normals()
+
+        # Combine meshes (alternative - to crop the first before merging)
+        combined = deformed + target_mesh
+        combined.compute_vertex_normals()
+
+        # Simplify mesh (smoothing and filtering)
+        deformed_smp = deformed.simplify_vertex_clustering(
+            parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING],
+            contraction=o3d.geometry.SimplificationContraction.Average)
+        deformed_smp = deformed_smp.filter_smooth_simple(
+            number_of_iterations=parameters[
+                POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+        deformed_smp = deformed_smp.filter_smooth_taubin(
+            number_of_iterations=parameters[
+                POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+
+        mesh_smp = combined.simplify_vertex_clustering(
+            parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING],
+            contraction=o3d.geometry.SimplificationContraction.Average)
+        mesh_smp = mesh_smp.filter_smooth_simple(
+            number_of_iterations=parameters[
+                POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+        mesh_smp = mesh_smp.filter_smooth_taubin(
+            number_of_iterations=parameters[
+                POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+
+        # mesh_smp.compute_vertex_normals()  # NOTE: Is this needed?
+
+        generated_polydata = self.convert_mesh_to_vtk_polydata(deformed_smp)
+        merged_polydata = self.convert_mesh_to_vtk_polydata(mesh_smp)
+
+        return generated_polydata, merged_polydata

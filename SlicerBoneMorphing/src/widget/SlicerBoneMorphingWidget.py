@@ -32,6 +32,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.logic = SlicerBoneMorphingLogic(self)
 
         self.setup_ui()
+        self.reset_parameters_to_default()
 
     def setup_ui(self):
         """
@@ -125,6 +126,9 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.ui.bcpdNormalizationComboBox.setCurrentIndex(
             BCPD_DEFAULT_VALUE_NORMALIZATION_OPTIONS)
 
+        self.ui.postprocessingClusteringScalingDoubleSpinBox.value = POSTPROCESSING_DEFAULT_VALUE_CLUSTERING_SCALING
+        self.ui.processingSmoothingIterationsSpinBox.value = POSTPROCESSING_DEFAULT_VALUE_SMOOTHING_ITERATIONS
+
     def setup_combo_box(self, combo_box: QComboBox, enum, onSelectionChanged):
         """
             Method for setting up combo box and its possible values
@@ -170,11 +174,34 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params = {}
         params[PREPROCESSING_KEY] = self.parse_parameters_preprocessing()
         params[BCPD_KEY] = self.parse_parameters_bcpd()
+        params[POSTPROCESSING_KEY] = self.parse_parameters_postprocessing()
 
         return params
 
     def parse_parameters_preprocessing(self) -> dict:
         params = {}
+
+        ## Preprocessing
+        params[
+            PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD] = self.ui.preprocessingDownsamplingDistanceThresholdDoubleSpinBox.value
+        params[
+            PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] = self.ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value
+        params[
+            PREPROCESSING_KEY_MAX_NN_NORMALS] = self.ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value
+        params[
+            PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] = self.ui.preprocessingFpfhRadiusDoubleSpinBox.value
+        params[
+            PREPROCESSING_KEY_MAX_NN_FPFH] = self.ui.preprocessingFpfhMaxNeighboursSpinBox.value
+
+        ## Registration
+        params[
+            REGISTRATION_KEY_MAX_ITERATIONS] = self.ui.registrationMaxIterationsSpinBox.value
+        params[
+            REGISTRATION_KEY_DISTANCE_THRESHOLD] = self.ui.registrationDistanceThresholdDoubleSpinBox.value
+        params[
+            REGISTRATION_KEY_FITNESS_THRESHOLD] = self.ui.registrationFitnessThresholdDoubleSpinBox.value
+        params[
+            REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD] = self.ui.registrationIcpDistanceThresholdDoubleSpinBox.value
 
         return params
 
@@ -194,8 +221,8 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         if kappa < BCPD_MAX_VALUE_KAPPA:  # Setting it to max behaves like "infinity"
             params[BCPD_VALUE_KEY_KAPPA] = kappa
 
-        if self.ui.bcpdAdvancedParametersCheckBox.checked == True:
-            self.parse_advanced_parameters(params)
+        # if self.ui.bcpdAdvancedParametersCheckBox.checked == True:
+        self.parse_advanced_parameters(params)
 
         return params
 
@@ -281,23 +308,33 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             BCPD_VALUE_KEY_NORMALIZATION] = self.ui.bcpdNormalizationComboBox.currentText.lower(
             )
 
+    def parse_parameters_postprocessing(self) -> dict:
+        params = {}
+
+        params[
+            POSTPROCESSING_KEY_CLUSTERING_SCALING] = self.ui.postprocessingClusteringScalingDoubleSpinBox.value
+        params[
+            POSTPROCESSING_KEY_SMOOTHING_ITERATIONS] = self.ui.processingSmoothingIterationsSpinBox.value
+
+        return params
+
     def generate_model(self) -> None:
         """
             Generate button callback. Calls the Logic's generate_model method and adds the results into the scene
         """
         params = self.parse_parameters()
-        params_string = ""
-        for key in params.keys():
-            params_string += key + str(params[key]) + "\n"
-        print("Parameters: " + params_string)
 
-        # err, generated_polydata, merged_polydata = self.logic.generate_model(self.ui.sourceNodeSelectionBox.currentNode(), self.ui.targetNodeSelectionBox.currentNode(), params_string)
+        err, generated_polydata, merged_polydata = self.logic.generate_model(
+            self.ui.sourceNodeSelectionBox.currentNode(),
+            self.ui.targetNodeSelectionBox.currentNode(), params)
 
-        # if (err == EXIT_OK):
-        #     model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD generated')
-        #     model_node.SetAndObservePolyData(generated_polydata)
-        #     model_node.CreateDefaultDisplayNodes()
+        if (err == EXIT_OK):
+            model_node = slicer.mrmlScene.AddNewNodeByClass(
+                'vtkMRMLModelNode', 'BCPD generated')
+            model_node.SetAndObservePolyData(generated_polydata)
+            model_node.CreateDefaultDisplayNodes()
 
-        #     model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD merged')
-        #     model_node.SetAndObservePolyData(merged_polydata)
-        #     model_node.CreateDefaultDisplayNodes()
+            model_node = slicer.mrmlScene.AddNewNodeByClass(
+                'vtkMRMLModelNode', 'BCPD merged')
+            model_node.SetAndObservePolyData(merged_polydata)
+            model_node.CreateDefaultDisplayNodes()
