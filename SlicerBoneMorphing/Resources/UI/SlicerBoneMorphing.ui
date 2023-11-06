@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>564</width>
-    <height>1522</height>
+    <height>1257</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -97,10 +97,10 @@
       <string>Preprocessing parameters</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="collapsed">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_16">
       <item row="0" column="0" colspan="2">
@@ -307,10 +307,10 @@
       <string>BCPD parameters</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="collapsed">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
@@ -1107,7 +1107,7 @@
       <string>Postprocessing parameters</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_19">
       <item row="0" column="0">
