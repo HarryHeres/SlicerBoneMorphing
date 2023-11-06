@@ -10,6 +10,13 @@ Also, I would like to thank O. Hirose (@ohirose) for the research on BCPD/GBCPD 
 
 
 ## Installation
+**Supported platforms:**
+- Linux (x86_64)
+- Windows (x86_64)
+- MacOS (both x86_64 and ARM; Slicer runs through Rosetta on ARM-based Macs)
+
+
+Steps:
 - Download the latest ZIP package from Releases
 - Extract the ZIP contents to your desired folder
 - Open up 3D Slicer, go to Edit -> Application Settings
