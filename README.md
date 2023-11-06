@@ -26,10 +26,10 @@ When switching to the module, you should be greeted with the following UI:
 <img src="docs/assets/ui.png" width="400px" height="900px">
 </p>
 
-The UI consists of **4** main modules
+The UI consists of **4** main sections
 - Input
 - Preprocessing
-- BCPD
+- Generation
 - Postprocessing
 
 ## Architecture
