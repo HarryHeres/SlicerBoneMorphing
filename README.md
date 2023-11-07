@@ -73,7 +73,7 @@ At this moment, we have our point clouds preprocessed and ready for the next ste
 Here we try to define and calculate how and how much we need to adjust the source mesh to match the target one. 
 
 For this, we will use the downsampled point clouds with their corresponding FPFHs from the previous step.
-The concrete method we use is called **RANSAC**. It uses a process called "repeated random sub-sampling" to mitigate the effect of outliers as much as possible. 
+The concrete method we use is called **RANSAC**. It uses a process called "repeated random sub-sampling" to mitigate the effect of outliers and rotational differences as much as possible.
 The behaviour of this algorithm can be adjusted by the following parameters: 
 - **Max iterations**
 - **Distance threshold** - same meaning as in previous steps
@@ -86,11 +86,11 @@ This can be tuned by the following parameter:
 ### Generation section
 Since we now have a preprocessed meshes and with defined transformations from the *source* to the *target*, we can proceed to the **generation section**.
 
-For this purpose, we use a method called [Bayesian coherent point drift](https://github.com/ohirose/bcpd). It falls into the *non-rigid registration* category of algorithms, which is exactly what we need. 
+For this purpose, we use a method called [Bayesian coherent point drift](https://github.com/ohirose/bcpd). It falls into the *non-rigid registration* category of algorithms, which actually performs the deformation of the mesh to increase the fit of the source.
 It takes in both meshes and deforms the source into the target, similarly as we've already done in the [Registration section](#preprocessing-section).
-Due to the problem that BCPD allows for "unrealistic" deformations, we have already "premerged" the meshes together to mitigate this behaviour -> hence this is more of a optimization steps.
+Due to the problem that BCPD allows for "unrealistic" deformations, we have done the pre-registration steps, which lets us mitigate the chance of getting into unrealistic deformations.
 
-Now, BCPD allows for very fine adjustments of its behaviours using lots of different parameters. For exact description of their effects, please refer to the documentation [here](https://github.com/ohirose/bcpd/blob/master/README.md).
+Now, BCPD allows for very fine adjustments of its behaviours using lots of different parameters. For the exact description of their effects, please refer to the documentation [here](https://github.com/ohirose/bcpd/blob/master/README.md).
 
 > **Note: You do NOT have to perform any kind of installation process, the BCPD and its geodesic variant are already pre-built and preconfigured for immediate using in this module.**
 
