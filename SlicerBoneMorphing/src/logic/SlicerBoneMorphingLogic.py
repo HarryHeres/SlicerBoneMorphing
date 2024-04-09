@@ -298,7 +298,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         max_iterations: int,
     ) -> o3d.pipelines.registration.RegistrationResult:
         ''' Perform a registration of nearest neighbours using the RANSAC algorithm.
-            Distance threshold will be set as the voxel difference.
 
             Parameters
             ----------
