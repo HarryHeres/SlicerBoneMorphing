@@ -8,7 +8,8 @@ try:
     import open3d as o3d
 except ModuleNotFoundError:
     print("Module Open3D is not installed. Installing...")
-    slicer.util.pip_install('open3d')
+    slicer.util.pip_install(
+        'open3d===0.16.0')  # Version fix because of silicon based Macs
 
 import open3d as o3d
 import numpy as np
