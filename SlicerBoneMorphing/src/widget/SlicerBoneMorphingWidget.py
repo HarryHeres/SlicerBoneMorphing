@@ -12,10 +12,6 @@ import os
 
 
 class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
-    """Uses ScriptedLoadableModuleWidget base class, available at:
-    https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-
     def __init__(self, parent):
         """Called when the application opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.__init__(self, parent)
@@ -120,21 +116,21 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self._ui.postprocessingClusteringScalingDoubleSpinBox.value = POSTPROCESSING_DEFAULT_VALUE_CLUSTERING_SCALING
         self._ui.processingSmoothingIterationsSpinBox.value = POSTPROCESSING_DEFAULT_VALUE_SMOOTHING_ITERATIONS
 
-    def __setup_combo_box(self, combo_box: QComboBox, enum: Enum, onSelectionChanged):
+    def __setup_combo_box(self, combo_box: QComboBox, enum: Enum, on_selection_changed):
         """
             Method for setting up combo box and its possible values
         """
         for mode in list(enum):
             combo_box.addItem(mode.name, mode)
-        if onSelectionChanged is not None:
-            combo_box.currentIndexChanged.connect(onSelectionChanged)
+        if on_selection_changed is not None:
+            combo_box.currentIndexChanged.connect(on_selection_changed)
         combo_box.setCurrentIndex(0)
 
-    def __show_kernel_type(self, currentIndex) -> None:
+    def __show_kernel_type(self, current_index) -> None:
         """
             Kernel type callback
         """
-        if currentIndex == BcpdKernelType.STANDARD.value:
+        if current_index == BcpdKernelType.STANDARD.value:
             show_standard_setting = True
             show_geodesic_settings = False
         else:
@@ -144,11 +140,11 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self._ui.bcpdStandardKernelGroupBox.setVisible(show_standard_setting)
         self._ui.bcpdGeodesicKernelGroupBox.setVisible(show_geodesic_settings)
 
-    def __show_acceleration_mode(self, currentIndex: int) -> None:
+    def __show_acceleration_mode(self, current_index: int) -> None:
         """
             Acceleration mode combo box callback
         """
-        if currentIndex == BcpdAccelerationMode.AUTOMATIC.value:
+        if current_index == BcpdAccelerationMode.AUTOMATIC.value:
             show_automatic = True
             show_manual = False
         else:
