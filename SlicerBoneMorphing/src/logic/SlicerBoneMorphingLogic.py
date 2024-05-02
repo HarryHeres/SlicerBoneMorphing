@@ -59,8 +59,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 - mergedPolydata: generatedPolydata that had been merged with the targetModel
         """
 
-        if (source_model == VALUE_NODE_NOT_SELECTED
-                or target_model == VALUE_NODE_NOT_SELECTED):
+        if (source_model == VALUE_NODE_NOT_SELECTED or target_model == VALUE_NODE_NOT_SELECTED):
             print("Input or foundation model(s) were not selected")
             return EXIT_FAILURE, None, None
 
@@ -133,8 +132,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         numpy_normals = None
         model_normals = vtk_poly_data.GetPointData().GetNormals()
         if (model_normals is not None):
-            numpy_normals = vtk_to_numpy(
-                vtk_poly_data.GetPointData().GetNormals())
+            numpy_normals = vtk_to_numpy(vtk_poly_data.GetPointData().GetNormals())
 
         # Get indices (triangles), this would be a (n, 3) shape numpy array where n is the number of triangles.
         # If the vtkPolyData does not represent a valid triangle mesh, the indices may not form valid triangles.
@@ -144,8 +142,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         open3d_mesh = o3d.geometry.TriangleMesh(o3d.utility.Vector3dVector(numpy_vertices), o3d.utility.Vector3iVector(numpy_indices))
 
         if numpy_normals is not None:
-            open3d_mesh.vertex_normals = o3d.utility.Vector3dVector(
-                numpy_normals)
+            open3d_mesh.vertex_normals = o3d.utility.Vector3dVector(numpy_normals)
 
         return open3d_mesh
 
@@ -219,8 +216,10 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 parameters[REGISTRATION_KEY_FITNESS_THRESHOLD],
                 parameters[REGISTRATION_KEY_MAX_ITERATIONS]
             )
+            if result_ransac == None:
+                raise RuntimeError
         except RuntimeError:
-            print("No ideal fit was found using the RANSAC algorithm. Please, try adjusting the parameters")
+            print("No registration fit was found using the RANSAC algorithm. Please, try adjusting the preprocessing parameters")
             return EXIT_FAILURE, None
 
         result_icp = o3d.pipelines.registration.registration_icp(
@@ -259,8 +258,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     FPFH: open3d.pipelines.registration.Feature]
         '''
 
-        pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(
-            downsampling_distance_threshold)
+        pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(downsampling_distance_threshold)
 
         pcd_downsampled.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))
 
@@ -391,7 +389,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
     def __postprocess_meshes(
         self,
-        deformed: o3d.geometry.TriangleMesh,
+        generated: o3d.geometry.TriangleMesh,
         target_mesh: o3d.geometry.TriangleMesh,
         parameters: dict
     ) -> Tuple[vtk.vtkPolyData, vtk.vtkPolyData]:
@@ -400,7 +398,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            o3d.geometry.TriangleMesh deformed: BCPD result mesh
+            o3d.geometry.TriangleMesh generated: BCPD result mesh
             o3d.geometry.TriangleMesh target_mesh: Target model mesh
             dict parameters: parameters dict for the postprocessing stage
 
@@ -409,23 +407,25 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             Tuple[vtk.vtkPolyData, vtk.vtkPolyData]: Tuple[0] will represent the postprocessed BCPD mesh, Tuple[1] will represent the COMBINED mesh (i.e. BCPD result merged with the target mesh)
 
         """
-        deformed.compute_vertex_normals()
-        target_mesh.compute_vertex_normals()
 
-        # Combine meshes (alternative - to crop the first before merging)
-        combined = deformed + target_mesh
+        combined = generated + target_mesh
+
+        # Compute normals before postprocessing
+        generated.compute_vertex_normals()
         combined.compute_vertex_normals()
 
         # Simplify mesh (smoothing and filtering)
-        deformed_smp = deformed.simplify_vertex_clustering(parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
-        deformed_smp = deformed_smp.filter_smooth_simple(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
-        deformed_smp = deformed_smp.filter_smooth_taubin(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+        if parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING] > 1.0:
+            generated = generated.simplify_vertex_clustering(parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
+            combined = combined.simplify_vertex_clustering(parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
 
-        mesh_smp = combined.simplify_vertex_clustering(parameters[POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_smp = mesh_smp.filter_smooth_simple(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
-        mesh_smp = mesh_smp.filter_smooth_taubin(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+        if parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS] > 0:
+            generated = generated.filter_smooth_simple(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+            generated = generated.filter_smooth_taubin(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+            combined = combined.filter_smooth_simple(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
+            combined = combined.filter_smooth_taubin(number_of_iterations=parameters[POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
 
-        generated_polydata = self.__convert_mesh_to_vtk_polydata(deformed_smp)
-        merged_polydata = self.__convert_mesh_to_vtk_polydata(mesh_smp)
+        generated_polydata = self.__convert_mesh_to_vtk_polydata(generated)
+        merged_polydata = self.__convert_mesh_to_vtk_polydata(combined)
 
         return generated_polydata, merged_polydata
