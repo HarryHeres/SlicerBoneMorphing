@@ -31,10 +31,29 @@ elif platform == "darwin":
 elif platform == "win32":
     BCPD_EXEC += "bcpd_win32.exe"
 
+SOURCE_VISUALIZATION_COLOR = [0, 1, 0]
+TARGET_VISUALIZATION_COLOR = [1, 0, 0]
+
 
 class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __init__(self, parent):
         ScriptedLoadableModuleLogic.__init__(self, parent)
+
+    def __visualize(self, source, target):
+        """
+        Only for debugging purposes
+        """
+        models = []
+
+        if (source != None):
+            source.paint_uniform_color(SOURCE_VISUALIZATION_COLOR)
+            models.append(source)
+
+        if (target != None):
+            target.paint_uniform_color(TARGET_VISUALIZATION_COLOR)
+            models.append(target)
+
+        o3d.visualization.draw_geometries(models)
 
     def generate_model(
             self,
@@ -71,10 +90,16 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             print("Cannot continue with generating. Aborting...")
             return EXIT_FAILURE, None, None
 
+        source_mesh.transform(result_icp.transformation)
+
+        # self.__visualize(source_mesh, target_mesh)
+
         # BCPD stage
-        deformed = self.__deformable_registration(source_mesh.transform(result_icp.transformation), target_mesh, parameters[BCPD_KEY])
+        deformed = self.__deformable_registration(source_mesh, target_mesh, parameters[BCPD_KEY])
         if (deformed == None):
             return EXIT_FAILURE, None, None
+
+        # self.__visualize(deformed, None)
 
         generated_polydata, merged_polydata = self.__postprocess_meshes(deformed, target_mesh, parameters[POSTPROCESSING_KEY])
 
@@ -240,14 +265,14 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             max_nn_normals: int,
             max_nn_fpfh: int
     ) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Feature]:
-        ''' 
+        '''
             Perform downsampling of a mesh, normal estimation and computing FPFH feature of the point cloud.
 
             Parameters
             ----------
             o3d.geometry.PointCloud pcd: Source point cloud
             float downsampling_distance_threshold: Distance threshold for downsampling
-            float normals_estimation_radius: Radius for estimating normals 
+            float normals_estimation_radius: Radius for estimating normals
             float fpfh_estimation_radius: Radius for the FPFH computation
             int max_nn_normals: Maximum number of neighbours considered for normals estimation
             int max_nn_fpfh: Maximum number of neighbours considered for the FPFH calculation
@@ -339,12 +364,12 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             Parameters
             ----------
             o3d.geometry.PointCloud sourcePcd: source point cloud
-            o3d.geometry.PointCloud targetPcd: target point cloud 
+            o3d.geometry.PointCloud targetPcd: target point cloud
             string bcpdParameters: parameters for the BCPD algorithm
 
             Returns
             -------
-            o3d.geometry.TriangleMesh representing the new deformed mesh 
+            o3d.geometry.TriangleMesh representing the new deformed mesh
         """
         source_array = np.asarray(source_pcd.vertices, dtype=np.float32)
         target_array = np.asarray(target_pcd.vertices, dtype=np.float32)
