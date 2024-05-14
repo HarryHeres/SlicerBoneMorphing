@@ -283,13 +283,14 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                     FPFH: open3d.pipelines.registration.Feature]
         '''
 
-        pcd_downsampled: o3d.geometry.PointCloud = pcd.voxel_down_sample(downsampling_distance_threshold)
+        if downsampling_distance_threshold > 0.0:
+            pcd = pcd.voxel_down_sample(downsampling_distance_threshold)
 
-        pcd_downsampled.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))
+        pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))
 
-        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd_downsampled, o3d.geometry.KDTreeSearchParamHybrid(radius=fpfh_estimation_radius, max_nn=max_nn_fpfh))
+        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=fpfh_estimation_radius, max_nn=max_nn_fpfh))
 
-        return pcd_downsampled, pcd_fpfh
+        return pcd, pcd_fpfh
 
     def __ransac_pcd_registration(
         self,
