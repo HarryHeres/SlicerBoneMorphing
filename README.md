@@ -2,19 +2,17 @@
 <!-- TODO: Explain in more depth -->
 Extension for 3D Slicer for bone mesh morphing.
 
-At the moment, this module specializes for the *humerus* bone. 
+At the moment, this module specializes for the *humerus* bone, but the use case is not limited to it. 
 
-## Special thanks <3 
-Special thanks goes to my wonderful colleagues Eva C. Herbst (@evaherbst) and Arthur Port (@agporto) for creating the initial idea and their huge help during the development of this module! 
+## Special thanks 
+Special thanks goes to my wonderful colleagues Eva C. Herbst (@evaherbst) and Arthur Porto (@agporto) for creating the initial idea and their huge help during the development of this module! 
 Also, I would like to thank O. Hirose (@ohirose) for the research on BCPD/GBCPD and it's implementation (can be found [here](https://github.com/ohirose/bcpd))
-
 
 ## Installation
 **Supported platforms:**
 - Linux (x86_64)
 - Windows (x86_64)
 - MacOS (both x86_64 and ARM; Slicer runs through Rosetta on ARM-based Macs)
-
 
 Steps:
 - Download the latest ZIP package from Releases
@@ -40,70 +38,68 @@ The UI consists of **4** main sections
 - Postprocessing
 
 ## Architecture
-<!-- TODO: Create a workflow diagram -->
-To be added.
+<p align="center"> 
+<img src="docs/assets/module_diagram.svg" width="600px" height="700px">
+</p>
 
 ## Module sections
 
-### Input section
+### <ins>Input section</ins>
 This section is self-explanatory. Here, you choose two input models:
-- Source = Source for the generation; This is the model that represents the 
-- Target = Model which is non-complete => Needs its missing portions generated
+- Source = The mean model, i.e. a full humerus
+- Target = Partial model to be reconstructed
 
-### Preprocessing section
+### <ins>Preprocessing section</ins>
 
-#### <ins>Point cloud preprocessing</ins>
-Before the generation process, we usually want to preprocess the model.
-Reasons could be to remove unwanted **outliers** or to smooth out the models.
-First of all, the model is converted to a *point cloud* to be able to effectively perform some preprocessing steps.
-
-Then, a downsampling is performed. For this, you can configure the threshold for downsampling by the following parameter:
+Before the generation process, we want to preprocess the model.
+First of all is the option of downsampling. For this, you can configure the threshold for downsampling by the following parameter:
 - **Downsampling distance threshold**
+    - If set to 0.0, no downsampling is performed
 
-After the downsampling, we compute the normals of the point cloud. It uses a radius for which the normals are calculated and maximum number of neighbours. This can be adjusted with the following parameter: 
-- **Normals estimation radius**
-- **Normals estimation max neighbours**
+After the downsampling, we compute the normals of the point cloud. 
+The computation needs a radius for which the normals are calculated and maximum number of neighbours. 
+These can be adjusted with the following parameters: 
+- **Normals estimation radius** - maximum radius in which points are considered neighbouring
+- **Normals estimation max neighbours** - maximum number of neighbours taken into account 
 
-Also, we want calculate a *Fast point feature histogram* to somehow encode the local geometric properties. This method takes in two following parameters:
-- **FPFH search radius** - Radius in which the FPFH is calculated in
-- **FPFH max neighbours** - Maximum number of neighbours taken into account 
+Also, we need to calculate a *(Fast) point feature histogram* in order to encode the local geometric properties of the models. 
+This method uses the following parameters:
+- **FPFH search radius** - maximum radius in which points are considered neighbouring
+- **FPFH max neighbours** - maximum number of neighbours taken into account 
 
-#### <ins>Registration section</ins>
-At this moment, we have our point clouds preprocessed and ready for the next step, which is the "registration" section.
-Here we try to define and calculate how and how much we need to adjust the source mesh to match the target one. 
-
-For this, we will use the downsampled point clouds with their corresponding FPFHs from the previous step.
-The concrete method we use is called **RANSAC**. It uses a process called "repeated random sub-sampling" to mitigate the effect of outliers and rotational differences as much as possible.
+#### <ins>Registration</ins>
+At this moment we have our models preprocessed and ready for the next step, which is the registration.
+Here we calculate the rigid alignment of the models in order to pre-align them.
+The concrete method we use is called **RANSAC** (random sample consensus). 
 The behaviour of this algorithm can be adjusted by the following parameters: 
 - **Max iterations**
-- **Distance threshold** - same meaning as in previous steps
-- **Fitness threshold** - the lowest fitness between the point clouds to be accepted. The lower, the higher chance of finding a good fit. The higher, higher the chance that either *max iterations* are reached 
+- **Distance threshold** - maximum distance in which points are considered neighbouring
+- **Fitness threshold** - the lowest fitness between the models to be accepted. 
 
-The result of the *RANSAC* algorithm is a bit "raw". To get the best possible fit, we perform the **ICP registration algorithm** upon the result.
+The computed fit by the RANSAC algorithm is a bit "raw". To improve it further, we perform the **ICP** (Iterative closest points) algorithm.
 This can be tuned by the following parameter:
-- **ICP Distance threshold** - same meaning as in previous steps
+- **ICP Distance threshold** - maximum distance in which points are considered neighbouring
 
-### Generation section
-Since we now have a preprocessed meshes and with defined transformations from the *source* to the *target*, we can proceed to the **generation section**.
+### <ins>Reconstruction section</ins>
+Since we now have a preprocessed meshes and with defined transformations from the *source* to the *target*, we can proceed to the **reconstruction section**.
+For the reconstruction we use the **BCPD** (Bayesian coherent point drift) algorithm.
+Now, the BCPD allows for very fine adjustments of its behaviour using lots of different parameters. 
+For the exact description of their effects, please refer to the official documentation [here](https://github.com/ohirose/bcpd/blob/master/README.md).
 
-For this purpose, we use a method called [Bayesian coherent point drift](https://github.com/ohirose/bcpd). It falls into the *non-rigid registration* category of algorithms, which actually performs the deformation of the mesh to increase the fit of the source.
-It takes in both meshes and deforms the source into the target, similarly as we've already done in the [Registration section](#preprocessing-section).
-Due to the problem that BCPD allows for "unrealistic" deformations, we have done the pre-registration steps, which lets us mitigate the chance of getting into unrealistic deformations.
-
-Now, BCPD allows for very fine adjustments of its behaviours using lots of different parameters. For the exact description of their effects, please refer to the documentation [here](https://github.com/ohirose/bcpd/blob/master/README.md).
-
-> **Note: You do NOT have to perform any kind of installation process, the BCPD and its geodesic variant are already pre-built and preconfigured for immediate using in this module.**
+> **Note: You do NOT have to perform any kind of installation process, the BCPD and its geodesic variant are already pre-built and preconfigured for immediate use in this module.**
 
 **Not implemented options:**
 - Terminal output 
 - File output
 
-### Postprocessing section
-After our models have been merged successfully, we still want to apply a slight amount of postprocessing to reach the most optimal results. 
-We are basically using a bit of **filtering and smoothing** to the meshes. 
+### <ins>Postprocessing section</ins>
+After the model is reconstructed, we include a postprocessing section to slightly modify the result, if necessary.
 For these, we let you modify the following parameters:
-- **Clustering scaling** - Scaled size of voxel for within vertices that are clustered together (additionally refer to [here](http://www.open3d.org/docs/0.7.0/python_api/open3d.geometry.simplify_vertex_clustering.html)
+- **Clustering scaling**
+    - Scaled size of voxel for within vertices that are clustered together (additionally refer to [here](http://www.open3d.org/docs/0.7.0/python_api/open3d.geometry.simplify_vertex_clustering.html))
+    - If set to 1.0, no scaling is performed
 - **Smoothing iterations** - Number of iterations of mesh smoothing
+    - If set to 0, no smoothing is applied 
 
 After the whole process is done, both the generated mesh (source transformed into target, standalone) and the merged mesh (generated meshes merged with the target; "combined model") are import back into the current Slicer scene.
 
@@ -111,14 +107,8 @@ After the whole process is done, both the generated mesh (source transformed int
 <img src="docs/assets/results.png" width="400px" height="50px">
 </p>
 
-## FAQ 
-To be added.
-
-## Troubleshooting
-To be added. 
-
 ## Contributors
-<!-- These people are AWESOME!  -->
+A huge thank you to all of the contributors! 
 
 <a href="https://github.com/HarryHeres/SlicerBoneMorphing/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=HarryHeres/SlicerBoneMorphing" />

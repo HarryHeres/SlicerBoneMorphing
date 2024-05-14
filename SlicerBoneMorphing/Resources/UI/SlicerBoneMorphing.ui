@@ -26,7 +26,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="sourceNodeSelectionBoxLabel">
         <property name="toolTip">
-         <string>Select a node that represents the reference model</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a node that represents the reference (mean) model&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Source: </string>
@@ -60,7 +60,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="foundationNodeSelectionBoxLabel">
         <property name="toolTip">
-         <string>Select a node that represents the target model (the one to be deformed)</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a node that represents the target (impartial) model&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Target: </string>
@@ -97,10 +97,10 @@
       <string>Preprocessing parameters</string>
      </property>
      <property name="checked">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="collapsed">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_16">
       <item row="0" column="0" colspan="2">
@@ -112,7 +112,7 @@
          <item row="0" column="0">
           <widget class="QLabel" name="preprocessingDownsamplingDistanceThresholdLabel">
            <property name="toolTip">
-            <string>The higher the number, the lower the distance threshold for a neighbour point to be considered</string>
+            <string>Maximum distance in which points are considered neighbouring</string>
            </property>
            <property name="text">
             <string>Downsampling distance threshold:</string>
@@ -1137,7 +1137,7 @@
       <item row="1" column="1">
        <widget class="QSpinBox" name="processingSmoothingIterationsSpinBox">
         <property name="minimum">
-         <number>10</number>
+         <number>0</number>
         </property>
         <property name="maximum">
          <number>1000</number>
