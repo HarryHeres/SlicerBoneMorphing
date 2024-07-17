@@ -57,8 +57,4 @@ For these, we let you modify the following parameters:
 - **Smoothing iterations** - Number of iterations of mesh smoothing
     - If set to 0, no smoothing is applied 
 
-After the whole process is done, both the generated mesh (source transformed into target, standalone) and the merged mesh (generated meshes merged with the target; "combined model") are import back into the current Slicer scene.
-
-<p align="center"> 
-<img src="docs/assets/results.png" width="400px" height="50px">
-</p>
+After the whole process is done, the generated mesh is imported back into the current Slicer scene.
