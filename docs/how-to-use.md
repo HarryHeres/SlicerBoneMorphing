@@ -1,4 +1,6 @@
 # Guide on how to use the module
+### Visualization
+Here, you can check whether you want to visualize results of each pipeline steps using Open3D.
 
 ### Input section
 - Source = The mean model, i.e. a full humerus

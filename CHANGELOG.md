@@ -12,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Alert when installing Open3D (#3)
 - Formatting settings for flake8
 - Codeowners
+- Pipeline steps visualization (#12)
 
 ### Changed
 - Naming of the generated model based on the selected target node
+- Updated documentation (#11)
 
 ### Removed
 - Testing STL models

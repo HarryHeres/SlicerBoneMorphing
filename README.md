@@ -21,12 +21,7 @@ Steps:
 - Restart 3D Slicer
 
 ## Usage
-After a successful installation, the module will be available in the **Morphing** section. 
-When switching to the module, you should be greeted with the following UI: 
-
-<p align="center"> 
-<img src="docs/assets/ui.png" width="400px" height="900px">
-</p>
+After a successful installation, the module will be available in the **Morphing** section in the Modules dropdown menu. 
 
 ## How to use 
 For guidance on how to use the module, please refer to this [Guide](./docs/how-to-use.md).
