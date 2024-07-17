@@ -387,7 +387,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path}'
 
         for key in bcpd_parameters.keys():
-            cmd += f' {key}{bcpd_parameters[const.key]}'
+            cmd += f' {key}{bcpd_parameters[key]}'
 
         cmd += f' -o {output_path}'
         print("BCPD: " + cmd)
