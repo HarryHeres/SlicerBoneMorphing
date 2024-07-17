@@ -51,7 +51,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
     def __reset_parameters_to_default(self) -> None:
         ## Preprocessing parameters ##
-        self.__ui.preprocessingDownsamplingDistanceThresholdDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_DISTANCE_THRESHOLD
+        self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_VOXEL_SIZE
         self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_NORMAL_SCALE
         self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_MAX_NN_NORMALS
         self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_FEATURE_SCALE
@@ -160,7 +160,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params = {}
 
         # Preprocessing
-        params[const.PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD] = self.__ui.preprocessingDownsamplingDistanceThresholdDoubleSpinBox.value
+        params[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE] = self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] = self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_MAX_NN_NORMALS] = self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value
         params[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] = self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value
