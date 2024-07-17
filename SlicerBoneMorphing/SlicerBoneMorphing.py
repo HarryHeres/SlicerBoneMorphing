@@ -7,7 +7,7 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Slicer Bone Morphing"
         self.parent.categories = ["Morphing"]
