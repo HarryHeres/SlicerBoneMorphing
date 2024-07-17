@@ -273,7 +273,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
     def __generate_model(self) -> None:
         """
-            Generate button callback. Calls the Logic's generate_model method and adds the results into the slicer.mrmlScene
+            Generate button callback. Calls the Logic's generate_model method and adds the results into the Slicer scene
         """
         from src.logic.SlicerBoneMorphingLogic import SlicerBoneMorphingLogic
 
@@ -281,15 +281,16 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             self.__logic = SlicerBoneMorphingLogic()
         params = self.__parse_parameters()
 
-        err, generated_polydata, merged_polydata = self.__logic.generate_model(
-            self.__ui.sourceNodeSelectionBox.currentNode(),
-            self.__ui.targetNodeSelectionBox.currentNode(), params)
+        source_node = self.__ui.sourceNodeSelectionBox.currentNode()
+        target_node = self.__ui.targetNodeSelectionBox.currentNode()
+
+        if (source_node is None or target_node is None):
+            print("Please select a valid source and target node")
+            return
+
+        err, generated_polydata = self.__logic.generate_model(source_node, target_node, params)
 
         if (err == const.EXIT_OK):
-            model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD generated')
+            model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([target_node.GetName(), "generated"]))
             model_node.SetAndObservePolyData(generated_polydata)
-            model_node.CreateDefaultDisplayNodes()
-
-            model_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', 'BCPD merged')
-            model_node.SetAndObservePolyData(merged_polydata)
             model_node.CreateDefaultDisplayNodes()

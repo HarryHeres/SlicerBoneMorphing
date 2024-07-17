@@ -42,9 +42,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
     def __visualize(self, source, target):
-        """
-        Only for debugging purposes
-        """
         models = []
 
         if (source is not None):
@@ -62,50 +59,49 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             source_model: vtkMRMLModelNode,
             target_model: vtkMRMLModelNode,
             parameters: dict
-    ) -> Tuple[int, vtk.vtkPolyData, vtk.vtkPolyData]:
+    ) -> Tuple[int, vtk.vtkPolyData]:
         """
             Generates new model based on the BCPD algorithm fit between source and target models.
 
             Parameters
             ----------
-            vtkMRMLModelNode source_model - source (partial) model to be fit-generated
-            vtkMRMLModelNode target_model - model to fit the partial source by.
-            string parameters - parameters for the preprocessing, BCPD and postprocessing
+            source_model - source (partial) model to be fit-generated
+            target_model - model to fit the partial source by.
+            parameters - parameters for the preprocessing, BCPD and postprocessing
 
             Returns
             -------
-            Tuple[int status, vtk.vtkPolyData generatedPolydata, vtk.vtkPolyData mergedPolydata]:
+            Tuple[status, generatedPolydata]:
                 - status: EXIT_OK or EXIT_FAILURE
                 - generatedPolydata: Generated model by the BCPD
-                - mergedPolydata: generatedPolydata that had been merged with the targetModel
         """
 
         if (source_model == const.VALUE_NODE_NOT_SELECTED or target_model == const.VALUE_NODE_NOT_SELECTED):
             print("Input or foundation model(s) were not selected")
-            return const.EXIT_FAILURE, None, None
+            return const.EXIT_FAILURE, None
 
         source_mesh = self.__convert_model_to_mesh(source_model)
         target_mesh = self.__convert_model_to_mesh(target_model)
 
-        err, result_icp = self.__preprocess_model(source_mesh, target_mesh, parameters[const.const.PREPROCESSING_KEY])
+        err, result_icp = self.__preprocess_model(source_mesh, target_mesh, parameters[const.PREPROCESSING_KEY])
         if err == const.EXIT_FAILURE:
-            print("Cannot continue with generating. Aborting...")
-            return const.EXIT_FAILURE, None, None
+            print("Cannot continue to reconstruction. Aborting...")
+            return const.EXIT_FAILURE, None
 
         source_mesh.transform(result_icp.transformation)
 
         # self.__visualize(source_mesh, target_mesh)
 
         # BCPD stage
-        deformed = self.__deformable_registration(source_mesh, target_mesh, parameters[const.const.BCPD_KEY])
-        if (deformed is not None):
-            return const.EXIT_FAILURE, None, None
+        deformed = self.__deformable_registration(source_mesh, target_mesh, parameters[const.BCPD_KEY])
+        if (deformed is None):
+            return const.EXIT_FAILURE, None
 
         # self.__visualize(deformed, None)
 
-        generated_polydata, merged_polydata = self.__postprocess_meshes(deformed, target_mesh, parameters[const.const.POSTPROCESSING_KEY])
+        generated_polydata = self.__postprocess_meshes(deformed, parameters[const.POSTPROCESSING_KEY])
 
-        return const.EXIT_OK, generated_polydata, merged_polydata
+        return const.EXIT_OK, generated_polydata
 
     def __convert_mesh_to_vtk_polydata(self, mesh: o3d.geometry.TriangleMesh) -> vtk.vtkPolyData:
         """
@@ -144,11 +140,11 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            slicer.vtkMRMLNode model - model to be converted
+            model - model to be converted
 
             Returns
             -------
-            open3d.geometry.TriangleMesh
+            Converted TriangleMesh
         """
         vtk_poly_data = model.GetPolyData()
 
@@ -175,15 +171,15 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
     def __convert_mesh_to_point_cloud(self, mesh: o3d.geometry.TriangleMesh) -> o3d.geometry.PointCloud:
         """
-            Convert o3d.geometry.TriangleMesh to o3d.geometry.PointCloud
+            Convert TriangleMesh to PointCloud
 
             Parameters
             ----------
-            o3d.geometry.TriangleMesh mesh - mesh to be converted
+            mesh - mesh to be converted
 
             Returns
             -------
-            o3d.geometry.PointCloud
+            Converted PointCloud
         """
 
         # mesh_center = mesh.get_center()
@@ -206,12 +202,12 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            o3d.geometry.TriangleMesh source_mesh: Source MRML model
-            o3d.geometry.TriangleMesh target_mesh: Target MRML model
+            source_mesh: Source MRML model
+            target_mesh: Target MRML model
 
             Returns
             -------
-            Tuple[int, o3d.pipelines.registration.RegistrationResult] - if Tuple[0] equals EXIT_OK, then Tuple[1] will carry the registration result
+             - if [0] equals EXIT_OK, then [1] will carry the registration result
         """
 
         source_pcd = self.__convert_mesh_to_point_cloud(source_mesh)
@@ -243,7 +239,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 parameters[const.REGISTRATION_KEY_FITNESS_THRESHOLD],
                 parameters[const.REGISTRATION_KEY_MAX_ITERATIONS]
             )
-            if result_ransac is not None:
+            if result_ransac is None:
                 raise RuntimeError
         except RuntimeError:
             print("No registration fit was found using the RANSAC algorithm. Please, try adjusting the preprocessing parameters")
@@ -281,8 +277,9 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Returns
             -------
-            Tuple: [Downsampled PCD: open3d.geometry.PointCloud,
-                    FPFH: open3d.pipelines.registration.Feature]
+            Tuple: [open3d.geometry.PointCloud, open3d.pipelines.registration.Feature]
+                - [0] = downsampled PCD
+                - [1] = FPFH
         '''
 
         if downsampling_distance_threshold > 0.0:
@@ -308,17 +305,17 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            o3d.geometry.PointCloud source_pcd_down: Downsampled SOURCE point cloud
-            o3d.geometry.PointCloud target_pcd_down: Downsampled TARGET point cloud
-            o3d.pipelines.registration.Feature source_fpfh: Source PCD Fast-Point-Feature-Histogram
-            o3d.pipelines.registration.Feature target_fpfh: Target PCD Fast-Point-Feature-Histogram
-            float distance_threshold: Threshold in which a near point is considered a neighbour
-            float fitness_threshold: Minimal value for iterations until it is reached
+            source_pcd_down: Downsampled SOURCE point cloud
+            target_pcd_down: Downsampled TARGET point cloud
+            source_fpfh: Source PCD Fast-Point-Feature-Histogram
+            target_fpfh: Target PCD Fast-Point-Feature-Histogram
+            distance_threshold: Threshold in which a near point is considered a neighbour
+            fitness_threshold: Minimal value for iterations until it is reached
             max_iterations: Maximum number of iterations of the RANSAC algorithm
 
             Returns
             -------
-            Best PCD fit: open3d.pipelines.registration.RegistrationResult
+            RANSAC registration result
 
         '''
         fitness = 0
@@ -366,13 +363,13 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            o3d.geometry.PointCloud sourcePcd: source point cloud
-            o3d.geometry.PointCloud targetPcd: target point cloud
-            string bcpdParameters: parameters for the BCPD algorithm
+            sourcePcd: source point cloud
+            targetPcd: target point cloud
+            bcpdParameters: parameters for the BCPD algorithm
 
             Returns
             -------
-            o3d.geometry.TriangleMesh representing the new deformed mesh
+            New deformed mesh
         """
         source_array = np.asarray(source_pcd.vertices, dtype=np.float32)
         target_array = np.asarray(target_pcd.vertices, dtype=np.float32)
@@ -418,42 +415,32 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __postprocess_meshes(
         self,
         generated: o3d.geometry.TriangleMesh,
-        target_mesh: o3d.geometry.TriangleMesh,
         parameters: dict
-    ) -> Tuple[vtk.vtkPolyData, vtk.vtkPolyData]:
+    ) -> vtk.vtkPolyData:
         """
             Perform a postprocessing (smoothing and filtering) of the result of the BCPD algorithm
 
             Parameters
             ----------
-            o3d.geometry.TriangleMesh generated: BCPD result mesh
-            o3d.geometry.TriangleMesh target_mesh: Target model mesh
-            dict parameters: parameters dict for the postprocessing stage
+            generated: BCPD result mesh
+            parameters: parameters for the postprocessing stage
 
             Returns
             -------
-            Tuple[vtk.vtkPolyData, vtk.vtkPolyData]: Tuple[0] will represent the postprocessed BCPD mesh, Tuple[1] will represent the COMBINED mesh (i.e. BCPD result merged with the target mesh)
-
+            BCPD generated mesh
         """
-
-        combined = generated + target_mesh
 
         # Compute normals before postprocessing
         generated.compute_vertex_normals()
-        combined.compute_vertex_normals()
 
         # Simplify mesh (smoothing and filtering)
         if parameters[const.POSTPROCESSING_KEY_CLUSTERING_SCALING] > 1.0:
             generated = generated.simplify_vertex_clustering(parameters[const.POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
-            combined = combined.simplify_vertex_clustering(parameters[const.POSTPROCESSING_KEY_CLUSTERING_SCALING], contraction=o3d.geometry.SimplificationContraction.Average)
 
         if parameters[const.POSTPROCESSING_KEY_SMOOTHING_ITERATIONS] > 0:
             generated = generated.filter_smooth_simple(number_of_iterations=parameters[const.POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
             generated = generated.filter_smooth_taubin(number_of_iterations=parameters[const.POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
-            combined = combined.filter_smooth_simple(number_of_iterations=parameters[const.POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
-            combined = combined.filter_smooth_taubin(number_of_iterations=parameters[const.POSTPROCESSING_KEY_SMOOTHING_ITERATIONS])
 
         generated_polydata = self.__convert_mesh_to_vtk_polydata(generated)
-        merged_polydata = self.__convert_mesh_to_vtk_polydata(combined)
 
-        return generated_polydata, merged_polydata
+        return generated_polydata
