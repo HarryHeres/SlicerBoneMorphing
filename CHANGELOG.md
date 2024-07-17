@@ -12,8 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Alert when installing Open3D (#3)
 - Formatting settings for flake8
 
+### Changed
+- Naming of the generated model based on the selected target node
+
 ### Removed
 - Testing STL models
+- Merged model from the scene
 
 ## [0.1.2] - 14.05.2024
 
