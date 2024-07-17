@@ -215,7 +215,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         source_pcd_downsampled, source_pcd_fpfh = self.__preprocess_point_cloud(
             source_pcd,
-            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD],
+            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE],
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_MAX_NN_NORMALS],
@@ -224,7 +224,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         target_pcd_downsampled, target_pcd_fpfh = self.__preprocess_point_cloud(
             target_pcd,
-            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_DISTANCE_THRESHOLD],
+            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE],
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_MAX_NN_NORMALS],
@@ -257,7 +257,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __preprocess_point_cloud(
             self,
             pcd: o3d.geometry.PointCloud,
-            downsampling_distance_threshold: float,
+            downsampling_voxel_size: float,
             normals_estimation_radius: float,
             fpfh_estimation_radius: float,
             max_nn_normals: int,
@@ -282,8 +282,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 - [1] = FPFH
         '''
 
-        if downsampling_distance_threshold > 0.0:
-            pcd = pcd.voxel_down_sample(downsampling_distance_threshold)
+        if downsampling_voxel_size > 0.0:
+            pcd = pcd.voxel_down_sample(downsampling_voxel_size)
 
         pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))
 
@@ -318,39 +318,26 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             RANSAC registration result
 
         '''
-        fitness = 0
-        count = 0
-        best_result = None
-        fitness_max = 1
-
-        while (fitness < fitness_threshold and fitness < fitness_max and count < max_iterations):
-            result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
-                source_pcd_down,
-                target_pcd_down,
-                source_fpfh,
-                target_fpfh,
-                True,
-                distance_threshold,
+        result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+            source_pcd_down,
+            target_pcd_down,
+            source_fpfh,
+            target_fpfh,
+            True,
+            distance_threshold,
+            o3d.pipelines.registration.
+            TransformationEstimationPointToPoint(True),
+            3,
+            [
                 o3d.pipelines.registration.
-                TransformationEstimationPointToPoint(True),
-                3,
-                [
-                    o3d.pipelines.registration.
-                    CorrespondenceCheckerBasedOnEdgeLength(0.9),
-                    o3d.pipelines.registration.
-                    CorrespondenceCheckerBasedOnDistance(distance_threshold)
-                ],
-                # NOTE: Just for earlier termination, but still needs the outer loop for proper convergence
-                o3d.pipelines.registration.RANSACConvergenceCriteria(100000, fitness_threshold)
-            )
+                CorrespondenceCheckerBasedOnEdgeLength(0.9),
+                o3d.pipelines.registration.
+                CorrespondenceCheckerBasedOnDistance(distance_threshold)
+            ],
+            o3d.pipelines.registration.RANSACConvergenceCriteria(max_iteration=max_iterations, confidence=const.REGISTRATION_DEFAULT_VALUE_RANSAC_CONVERGENCE_CONFIDENCE)
+        )
 
-            if result.fitness > fitness and result.fitness < 1:
-                fitness = result.fitness
-                best_result = result
-
-            count += 1
-
-        return best_result
+        return result
 
     def __deformable_registration(
         self,
