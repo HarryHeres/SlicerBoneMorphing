@@ -12,6 +12,57 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="ctkCollapsibleButton" name="visualizationCollapsibleButton">
+     <property name="text">
+      <string>Visualization</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="visualizationVisualizeCheckBox">
+        <property name="toolTip">
+         <string>If checked, the pipeline steps will be visualized using Open3D</string>
+        </property>
+        <property name="text">
+         <string>Visualize pipeline steps</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="visualizationModelColorGroupBox">
+        <property name="title">
+         <string>Coloring</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="1">
+          <widget class="ctkColorPickerButton" name="visualizationSourceModelColorPickerButton"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="visualizationSourceModelColorLabel">
+           <property name="text">
+            <string>Source model color</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Target model color</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="ctkColorPickerButton" name="visualizationTargetModelColorPickerButton"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="ctkCollapsibleButton" name="inputSectionCollapsibleButton">
      <property name="text">
       <string>Input</string>
@@ -94,7 +145,7 @@
    <item>
     <widget class="ctkCollapsibleButton" name="preprocessingParametersCollapsibleButton">
      <property name="text">
-      <string>Preprocessing parameters</string>
+      <string>Preprocessing</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -307,7 +358,7 @@
    <item>
     <widget class="ctkCollapsibleButton" name="bcpdParametersCollapsibleButton">
      <property name="text">
-      <string>BCPD parameters</string>
+      <string>BCPD</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -1107,7 +1158,7 @@
    <item>
     <widget class="ctkCollapsibleButton" name="postprocessingCollapsibleButton">
      <property name="text">
-      <string>Postprocessing parameters</string>
+      <string>Postprocessing</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -1181,6 +1232,11 @@
    <extends>QGroupBox</extends>
    <header>ctkCollapsibleGroupBox.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkColorPickerButton</class>
+   <extends>QPushButton</extends>
+   <header>ctkColorPickerButton.h</header>
   </customwidget>
   <customwidget>
    <class>qMRMLNodeComboBox</class>
@@ -1337,6 +1393,22 @@
     <hint type="destinationlabel">
      <x>102</x>
      <y>1145</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>visualizationVisualizeCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>visualizationModelColorGroupBox</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>163</x>
+     <y>44</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>318</x>
+     <y>192</y>
     </hint>
    </hints>
   </connection>

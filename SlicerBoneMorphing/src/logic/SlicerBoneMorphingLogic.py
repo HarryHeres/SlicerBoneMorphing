@@ -33,26 +33,23 @@ elif platform == "darwin":
 elif platform == "win32":
     BCPD_EXEC += "bcpd_win32.exe"
 
-SOURCE_VISUALIZATION_COLOR = [0, 1, 0]
-TARGET_VISUALIZATION_COLOR = [1, 0, 0]
-
 
 class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __init__(self, parent=None):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
-    def __visualize(self, source, target):
+    def __visualize(self, source, target, window_name: str = "", source_color=const.VISUALIZATION_DEFAULT_VALUE_TARGET_MODEL_COLOR, target_color=const.VISUALIZATION_KEY_TARGET_MODEL_COLOR):
         models = []
 
         if (source is not None):
-            source.paint_uniform_color(SOURCE_VISUALIZATION_COLOR)
+            source.paint_uniform_color(np.array([source_color.red() / 255, source_color.green() / 255, source_color.blue() / 255]))
             models.append(source)
 
         if (target is not None):
-            target.paint_uniform_color(TARGET_VISUALIZATION_COLOR)
+            target.paint_uniform_color(np.array([target_color.red() / 255, target_color.green() / 255, target_color.blue() / 255]))
             models.append(target)
 
-        o3d.visualization.draw_geometries(models)
+        o3d.visualization.draw_geometries(models, window_name=window_name, mesh_show_wireframe=True, point_show_normal=True)
 
     def generate_model(
             self,
@@ -75,11 +72,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 - status: EXIT_OK or EXIT_FAILURE
                 - generatedPolydata: Generated model by the BCPD
         """
-
-        if (source_model == const.VALUE_NODE_NOT_SELECTED or target_model == const.VALUE_NODE_NOT_SELECTED):
-            print("Input or foundation model(s) were not selected")
-            return const.EXIT_FAILURE, None
-
         source_mesh = self.__convert_model_to_mesh(source_model)
         target_mesh = self.__convert_model_to_mesh(target_model)
 
@@ -90,16 +82,23 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         source_mesh.transform(result_icp.transformation)
 
-        # self.__visualize(source_mesh, target_mesh)
+        visualization_params = parameters[const.VISUALIZATION_KEY]
+
+        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
+            self.__visualize(source_mesh, target_mesh, "Preprocessed models", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
 
         # BCPD stage
         deformed = self.__deformable_registration(source_mesh, target_mesh, parameters[const.BCPD_KEY])
         if (deformed is None):
             return const.EXIT_FAILURE, None
 
-        # self.__visualize(deformed, None)
+        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
+            self.__visualize(deformed, None, "Reconstructed model", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
 
         generated_polydata = self.__postprocess_meshes(deformed, parameters[const.POSTPROCESSING_KEY])
+
+        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
+            self.__visualize(deformed, None, "Postprocessed model", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
 
         return const.EXIT_OK, generated_polydata
 
