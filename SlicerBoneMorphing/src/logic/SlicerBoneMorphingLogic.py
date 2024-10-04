@@ -1,6 +1,7 @@
 import src.logic.Constants as const
 import tempfile
 import subprocess
+from subprocess import CalledProcessError
 from vtk.util.numpy_support import vtk_to_numpy
 import vtk
 import glob
@@ -375,11 +376,17 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         cmd += f' -o {output_path}'
         print("BCPD: " + cmd)
 
-        subprocess.run(cmd,
-                       shell=True,
-                       check=True,
-                       text=True,
-                       capture_output=True)
+        try:
+            subprocess.run(cmd,
+                           shell=True,
+                           check=True,
+                           text=True,
+                           capture_output=True)
+        except CalledProcessError as e:
+            print("BCPD subprocess returned with error (code {}): {}".format(e.returncode, e.output))
+            print("Process output: {}".format(e.output))
+            print("Errors: {}".format(e.stderr))
+            return None
 
         try:
             bcpdResult = np.loadtxt(output_path + "y.interpolated.txt")
