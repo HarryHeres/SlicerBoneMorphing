@@ -21,9 +21,10 @@ jobs:
 
       - name: Create ZIP archive
         env:
-          version: ${{needs.steps.get-app-version.outputs.version}}
+          version: ${{steps.get-app-version.outputs.version}}
         run: |
           cd src
+          echo $version
           zip -r SlicerBoneMorphing-$version.zip ./*
           cd ..
           cp src/SlicerBoneMorphing-$version.zip . 
@@ -32,7 +33,7 @@ jobs:
         id: create-pre-release 
         uses: actions/github-script@v6
         env:
-          version: ${{needs.steps.get-app-version.outputs.version}}
+          version: ${{steps.get-app-version.outputs.version}}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}  
           script: |
@@ -57,8 +58,8 @@ jobs:
       - name: Upload ZIP to the release
         uses: actions/github-script@v6
         env:
-          version: ${{needs.steps.get-app-version.outputs.version}}
-          release_id: ${{needs.steps.create-pre-release.outputs.release_id}}
+          version: ${{steps.get-app-version.outputs.version}}
+          release_id: ${{steps.create-pre-release.outputs.release_id}}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
