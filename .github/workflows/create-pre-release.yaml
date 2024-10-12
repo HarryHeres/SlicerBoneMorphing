@@ -17,67 +17,39 @@ jobs:
 
       - name: Parse current version
         id: get-app-version
-        run: echo "version=$(cat src/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(cat src/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Create ZIP archive
         env:
-          version: ${{steps.get-app-version.outputs.version}}
+          VERSION: ${{steps.get-app-version.outputs.version}}
         run: |
           cd src
           echo $version
-          zip -r SlicerBoneMorphing-$version.zip ./*
+          zip -r SlicerBoneMorphing-$VERSION.zip ./*
           cd ..
-          cp src/SlicerBoneMorphing-$version.zip . 
+          cp src/SlicerBoneMorphing-$VERSION.zip . 
 
-      - name: Create a pre-release
-        id: create-pre-release 
-        uses: actions/github-script@v6
+
+      - name: Create pre-release
+        id: create-pre-release
+        uses: actions/create-release@v1
         env:
-          version: ${{steps.get-app-version.outputs.version}}
+          VERSION: ${{ steps.get-app-version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}  
-          script: |
-            const version = process.env.version;
-            const fs = require('fs');
-            const body = fs.readFileSync("CHANGELOG.md", 'utf8');
+          release_name: $VERSION
+          tag_name: "v${VERSION}"
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: true
 
-            const response = await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: `v${version}`,
-              name: `v${version}`,
-              body:  `${body}`,
-              draft: false,
-              prerelease: true
-            });
-
-            return  `release_id=${response.data.release_id}`;
-
-      - name: Upload ZIP to the release
-        uses: actions/github-script@v6
+      - name: Upload artifacts
+        uses: actions/upload-release-asset@v1
         env:
-          version: ${{steps.get-app-version.outputs.version}}
-          release_id: ${{steps.create-pre-release.outputs.release_id}}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get-app-version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         with:
-          script: |
-            import { Octokit } from "@octokit/core";
-
-            const version = process.env.version;
-            const release_id = process.env.release_id;
-
-            const octokit = new Octokit({
-              auth: process.env.github_token
-            });
-
-            await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: $release_id,
-              data: `@SlicerBoneMorphing-${version}.zip`,
-              name: `SlicerBoneMorphing-${version}.zip`,
-              label: "",
-              headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-              }
-            });
+          upload_url: ${{ steps.create-pre-release.outputs.upload_url }}
+          asset_path: "SlicerBoneMorphing-${VERSION}.zip"
+          asset_name: "SlicerBoneMorphing-${VERSION}.zip"
+          asset_content_type: application/gzip
