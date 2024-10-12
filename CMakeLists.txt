@@ -6,7 +6,7 @@ project(SlicerBoneMorphing)
 # Extension meta-information
 set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/SlicerBoneMorphing")
 set(EXTENSION_CATEGORY "Morphing")
-set(EXTENSION_CONTRIBUTORS "Jan Heres (West Bohemian University)")
+set(EXTENSION_CONTRIBUTORS "Jan Heres")
 set(EXTENSION_DESCRIPTION "This extensions allows the user to generate and morph bone meshes based on its CT scans")
 set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/SlicerBoneMorphing.png")
 set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/SlicerBoneMorphing/Screenshots/1.png")

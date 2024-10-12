@@ -4,7 +4,6 @@ on:
   push:
     branches: ['develop', 'cicd']
 
-
 jobs:
   create-pre-release:
     runs-on: ubuntu-latest
