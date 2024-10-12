@@ -93,11 +93,11 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         if (options_params[const.OPTIONS_KEY_IMPORT_REGISTRATION_MODEL] is True):
             registration_result = self.__convert_mesh_to_vtk_polydata(source_mesh)
-            registration_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([registration_result.GetName(), "rigid_registration_result"]))
+            registration_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([target_model.GetName(), "rigid_registration_result"]))
             registration_node.SetAndObservePolyData(registration_result)
             registration_node.CreateDefaultDisplayNodes()
 
-        if (options_params[const.OPTIONS_KEY_SHOULD_VISUALIZE] is True):
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
             self.__visualize(source_mesh, target_mesh, "Preprocessed models", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         # BCPD stage
@@ -105,12 +105,12 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         if (deformed is None):
             return const.EXIT_FAILURE, None
 
-        if (options_params[const.OPTIONS_KEY_SHOULD_VISUALIZE] is True):
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
             self.__visualize(deformed, None, "Reconstructed model", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         generated_polydata = self.__postprocess_meshes(deformed, parameters[const.POSTPROCESSING_KEY])
 
-        if (options_params[const.OPTIONS_KEY_SHOULD_VISUALIZE] is True):
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
             self.__visualize(deformed, None, "Postprocessed model", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         return const.EXIT_OK, generated_polydata
