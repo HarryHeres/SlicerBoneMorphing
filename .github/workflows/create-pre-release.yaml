@@ -32,7 +32,7 @@ jobs:
           script: |
             const version = process.env.VERSION;
             const fs = require('fs');
-            const body = fs.readFileSync(changelogPath, 'utf8');
+            const body = fs.readFileSync("CHANGELOG.md", 'utf8');
 
             const response = await github.rest.repos.createRelease({
               owner: context.repo.owner,
