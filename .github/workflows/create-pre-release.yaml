@@ -1,6 +1,9 @@
 name: Create and publish pre-release 
 
-on: workflow_dispatch
+on: 
+  push:
+    branches:
+      - 'cicd'
 
 jobs:
   create-pre-release:
