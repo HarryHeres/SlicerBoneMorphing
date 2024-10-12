@@ -17,7 +17,7 @@ jobs:
 
       - name: Parse current version
         id: get-app-version
-        run: echo "VERSION=$(cat src/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(cat SlicerBoneMorphing/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Create ZIP archive
         env:
