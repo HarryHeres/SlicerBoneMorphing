@@ -1,11 +1,11 @@
 # SlicerBoneMorphing
 Extension for 3D Slicer for bone mesh morphing.
 
-At the moment, this module specializes for the *humerus* bone, but the use case is not limited to it. 
+At the moment, this module specializes on the *humerus* bone, but the use case is not limited to it. 
 
-## Special thanks 
+## Special thanks 🙏 
 Special thanks goes to my wonderful colleagues [Eva C. Herbst](https://github.com/evaherbst) and [Arthur Porto](https://github.com/agporto) for creating the initial idea and their huge help during the development of this module! 
-Also, I would like to thank [O. Hirose](https://github.com/ohirose) for the research on BCPD/GBCPD and it's implementation (can be found [here](https://github.com/ohirose/bcpd))
+I would also like to thank [O. Hirose](https://github.com/ohirose) for the research on BCPD/GBCPD and it's implementation (can be found [here](https://github.com/ohirose/bcpd))
 
 ## Installation
 **Supported platforms:**
@@ -26,7 +26,7 @@ After a successful installation, the module will be available in the **Morphing*
 ## How to use 
 For guidance on how to use the module, please refer to this [Guide](./docs/how-to-use.md).
 
-## Contributors
+## Contributors ❤️
 A huge thank you to all of the contributors! 
 
 <a href="https://github.com/HarryHeres/SlicerBoneMorphing/graphs/contributors">

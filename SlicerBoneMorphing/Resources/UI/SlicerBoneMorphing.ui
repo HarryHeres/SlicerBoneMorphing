@@ -14,14 +14,14 @@
    <item>
     <widget class="ctkCollapsibleButton" name="visualizationCollapsibleButton">
      <property name="text">
-      <string>Visualization</string>
+      <string>Options</string>
      </property>
      <property name="checked">
       <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
-       <widget class="QCheckBox" name="visualizationVisualizeCheckBox">
+       <widget class="QCheckBox" name="optionsVisualizeCheckBox">
         <property name="toolTip">
          <string>If checked, the pipeline steps will be visualized using Open3D</string>
         </property>
@@ -30,36 +30,43 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
+      <item row="2" column="0" colspan="2">
        <widget class="QGroupBox" name="visualizationModelColorGroupBox">
         <property name="title">
          <string>Coloring</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="1">
-          <widget class="ctkColorPickerButton" name="visualizationSourceModelColorPickerButton"/>
+          <widget class="ctkColorPickerButton" name="optionsSourceModelColorPickerButton"/>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="visualizationSourceModelColorLabel">
+          <widget class="QLabel" name="optionsSourceModelColorLabel">
            <property name="text">
             <string>Source model color</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="optionsTargetModelColorLabel">
            <property name="text">
             <string>Target model color</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="ctkColorPickerButton" name="visualizationTargetModelColorPickerButton"/>
+          <widget class="ctkColorPickerButton" name="optionsTargetModelColorPickerButton"/>
          </item>
         </layout>
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="optionsImportRegistrationModelCheckBox">
+     <property name="text">
+      <string>Import rigid registration model into the scene</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -1397,7 +1404,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>visualizationVisualizeCheckBox</sender>
+   <sender>optionsVisualizeCheckBox</sender>
    <signal>toggled(bool)</signal>
    <receiver>visualizationModelColorGroupBox</receiver>
    <slot>setVisible(bool)</slot>

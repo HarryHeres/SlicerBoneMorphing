@@ -1,6 +1,7 @@
 import src.logic.Constants as const
 import tempfile
 import subprocess
+from subprocess import CalledProcessError
 from vtk.util.numpy_support import vtk_to_numpy
 import vtk
 import glob
@@ -8,6 +9,7 @@ import os
 import numpy as np
 from sys import platform
 from typing import Tuple
+import slicer
 from slicer.ScriptedLoadableModule import ScriptedLoadableModuleLogic
 from slicer import vtkMRMLModelNode
 import slicer.util as su
@@ -44,7 +46,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __init__(self, parent=None):
         ScriptedLoadableModuleLogic.__init__(self, parent)
 
-    def __visualize(self, source, target, window_name: str = "", source_color=const.VISUALIZATION_DEFAULT_VALUE_TARGET_MODEL_COLOR, target_color=const.VISUALIZATION_KEY_TARGET_MODEL_COLOR):
+    def __visualize(self, source, target, window_name: str = "", source_color=const.OPTIONS_DEFAULT_VALUE_TARGET_MODEL_COLOR, target_color=const.OPTIONS_KEY_TARGET_MODEL_COLOR):
         models = []
 
         if (source is not None):
@@ -87,24 +89,29 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             return const.EXIT_FAILURE, None
 
         source_mesh.transform(result_icp.transformation)
+        options_params = parameters[const.OPTIONS_KEY]
 
-        visualization_params = parameters[const.VISUALIZATION_KEY]
+        if (options_params[const.OPTIONS_KEY_IMPORT_REGISTRATION_MODEL] is True):
+            registration_result = self.__convert_mesh_to_vtk_polydata(source_mesh)
+            registration_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([target_model.GetName(), "rigid_registration_result"]))
+            registration_node.SetAndObservePolyData(registration_result)
+            registration_node.CreateDefaultDisplayNodes()
 
-        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
-            self.__visualize(source_mesh, target_mesh, "Preprocessed models", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
+            self.__visualize(source_mesh, target_mesh, "Preprocessed models", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         # BCPD stage
         deformed = self.__deformable_registration(source_mesh, target_mesh, parameters[const.BCPD_KEY])
         if (deformed is None):
             return const.EXIT_FAILURE, None
 
-        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
-            self.__visualize(deformed, None, "Reconstructed model", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
+            self.__visualize(deformed, None, "Reconstructed model", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         generated_polydata = self.__postprocess_meshes(deformed, parameters[const.POSTPROCESSING_KEY])
 
-        if (visualization_params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] is True):
-            self.__visualize(deformed, None, "Postprocessed model", visualization_params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR], visualization_params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR])
+        if (options_params[const.OPTIONS_KEY_VISUALIZE_RESULTS] is True):
+            self.__visualize(deformed, None, "Postprocessed model", options_params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR], options_params[const.OPTIONS_KEY_TARGET_MODEL_COLOR])
 
         return const.EXIT_OK, generated_polydata
 
@@ -381,11 +388,17 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         cmd += f' -o {output_path}'
         print("BCPD: " + cmd)
 
-        subprocess.run(cmd,
-                       shell=True,
-                       check=True,
-                       text=True,
-                       capture_output=True)
+        try:
+            subprocess.run(cmd,
+                           shell=True,
+                           check=True,
+                           text=True,
+                           capture_output=True)
+        except CalledProcessError as e:
+            print("BCPD subprocess returned with error (code {}): {}".format(e.returncode, e.output))
+            print("Process output: {}".format(e.output))
+            print("Errors: {}".format(e.stderr))
+            return None
 
         try:
             bcpdResult = np.loadtxt(output_path + "y.interpolated.txt")
