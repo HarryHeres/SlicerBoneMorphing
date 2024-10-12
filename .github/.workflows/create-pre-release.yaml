@@ -1,0 +1,45 @@
+#
+name: Create and publish pre-release 
+
+on:
+  push:
+    branches: ['develop']
+
+
+jobs:
+  create-pre-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse current version
+        run: echo "VERSION=$(cat SlicerBoneMorphing/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Create ZIP archive
+        run: zip -r SlicerBoneMorphing-$VERSION.zip ./src
+
+      - name: Create a pre-release link
+        id: create_release_link
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const response = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: $VERSION, 
+              name: $VERSION,  
+              body: 'SlicerBoneMorphing version $VERSION',
+              draft: false,    
+              prerelease: true 
+            });
+            return response.data.upload_url;
+
+      - name: Upload the archive
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release_link.outputs.upload_url }}
+          asset_path: ./
+          asset_name: SlicerBoneMorphing-$VERSION.zip
+          asset_content_type: application/zip
