@@ -53,9 +53,11 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.__reset_parameters_to_default()
 
     def __reset_parameters_to_default(self) -> None:
-        self.__ui.visualizationVisualizeCheckBox.setChecked(False)
-        self.__ui.visualizationSourceModelColorPickerButton.setColor(const.VISUALIZATION_DEFAULT_VALUE_SOURCE_MODEL_COLOR)
-        self.__ui.visualizationTargetModelColorPickerButton.setColor(const.VISUALIZATION_DEFAULT_VALUE_TARGET_MODEL_COLOR)
+        ## Options ##
+        self.__ui.optionsVisualizeCheckBox.setChecked(False)
+        self.__ui.optionsSourceModelColorPickerButton.setColor(const.OPTIONS_DEFAULT_VALUE_SOURCE_MODEL_COLOR)
+        self.__ui.optionsTargetModelColorPickerButton.setColor(const.OPTIONS_DEFAULT_VALUE_TARGET_MODEL_COLOR)
+        self.__ui.optionsImportRegistrationModelCheckBox.setChecked(False)
 
         ## Preprocessing parameters ##
         self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_VOXEL_SIZE
@@ -157,18 +159,19 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
             Parsing parameters from the UI user option elements
         """
         params = {}
-        params[const.VISUALIZATION_KEY] = self.__parse_parameters_visualization()
+        params[const.OPTIONS_KEY] = self.__parse_parameters_options()
         params[const.PREPROCESSING_KEY] = self.__parse_parameters_preprocessing()
         params[const.BCPD_KEY] = self.__parse_parameters_bcpd()
         params[const.POSTPROCESSING_KEY] = self.__parse_parameters_postprocessing()
 
         return params
 
-    def __parse_parameters_visualization(self) -> dict:
+    def __parse_parameters_options(self) -> dict:
         params = {}
-        params[const.VISUALIZATION_KEY_SHOULD_VISUALIZE] = self.__ui.visualizationVisualizeCheckBox.checked
-        params[const.VISUALIZATION_KEY_SOURCE_MODEL_COLOR] = self.__ui.visualizationSourceModelColorPickerButton.color
-        params[const.VISUALIZATION_KEY_TARGET_MODEL_COLOR] = self.__ui.visualizationTargetModelColorPickerButton.color
+        params[const.OPTIONS_KEY_VISUALIZE_RESULTS] = self.__ui.optionsVisualizeCheckBox.checked
+        params[const.OPTIONS_KEY_SOURCE_MODEL_COLOR] = self.__ui.optionsSourceModelColorPickerButton.color
+        params[const.OPTIONS_KEY_TARGET_MODEL_COLOR] = self.__ui.optionsTargetModelColorPickerButton.color
+        params[const.OPTIONS_KEY_IMPORT_REGISTRATION_MODEL] = self.__ui.optionsImportRegistrationModelCheckBox.checked
 
         return params
 

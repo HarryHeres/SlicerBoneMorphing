@@ -1,6 +1,6 @@
 # Guide on how to use the module
-### Visualization
-Here, you can check whether you want to visualize results of each pipeline steps using Open3D.
+### Options 
+Here, you have some pretty self-explanatory options, e.g. visualization of each step of the pipeline.
 
 ### Input section
 - Source = The mean model, i.e. a full humerus
@@ -60,3 +60,4 @@ For these, we let you modify the following parameters:
     - If set to 0, no smoothing is applied 
 
 After the whole process is done, the generated mesh is imported back into the current Slicer scene.
+
