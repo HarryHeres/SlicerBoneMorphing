@@ -30,7 +30,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: $VERSION
           artifacts: SlicerBoneMorphing-$VERSION.zip
           commit: $GITHUB_REF
           bodyFile: CHANGELOG.md
