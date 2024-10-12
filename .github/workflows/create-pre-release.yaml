@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Parse current version
-        run: echo "VERSION=$(cat SlicerBoneMorphing/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_ENV
+        run: echo "VERSION=$(cat src/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_ENV
 
       - name: Create ZIP archive
         run: |
