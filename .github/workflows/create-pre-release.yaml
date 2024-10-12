@@ -54,6 +54,7 @@ jobs:
       - name: Upload ZIP to the release
         uses: actions/github-script@v6
         env:
+          version: ${{needs.steps.get-app-version.outputs.version}}
           release_id: ${{needs.steps.create_pre_release.outputs.release_id}}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
