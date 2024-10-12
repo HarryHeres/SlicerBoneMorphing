@@ -24,15 +24,28 @@ jobs:
           zip -r SlicerBoneMorphing-$VERSION.zip ./*
           cp SlicerBoneMorphing-$VERSION.zip ../
 
-      - name: Create a pre-release link
-        id: create_release_link
-        uses: ncipollo/release-action@v1.14.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create a pre-release
+        id: create_release
+        uses: actions/github-script@v6
         with:
-          artifacts: SlicerBoneMorphing-$VERSION.zip
-          commit: $GITHUB_REF
-          bodyFile: CHANGELOG.md
-          prerelease: true
-          name: $VERSION
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use GITHUB_TOKEN with write permissions
+          script: |
+            const version = process.env.VERSION;
+            const response = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: version,
+              name: version,
+              body: `Release version ${version}`,
+              draft: false,
+              prerelease: true
+            });
+            return response.data.upload_url;
 
+      - name: Upload ZIP to the release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./my-archive.zip
+          asset_name: my-archive.zip
+          asset_content_type: application/zip
