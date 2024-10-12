@@ -61,6 +61,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
+            import { Octokit } from "@octokit/core";
+
             const version = process.env.version;
             const release_id = process.env.release_id;
 
