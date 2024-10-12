@@ -30,6 +30,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           artifacts: SlicerBoneMorphing-$VERSION.zip
+          commit: $GITHUB_REF
           bodyFile: CHANGELOG.md
           prerelease: true
           name: $VERSION
