@@ -23,11 +23,11 @@ jobs:
         env:
           VERSION: ${{steps.get-app-version.outputs.version}}
         run: |
-          cd src
+          cd SlicerBoneMorphing
           echo $version
           zip -r SlicerBoneMorphing-$VERSION.zip ./*
+          cp SlicerBoneMorphing-$VERSION.zip ../ 
           cd ..
-          cp src/SlicerBoneMorphing-$VERSION.zip . 
 
 
       - name: Create pre-release
