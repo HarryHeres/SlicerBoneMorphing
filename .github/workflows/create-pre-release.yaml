@@ -37,8 +37,8 @@ jobs:
           VERSION: ${{ steps.get-app-version.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         with:
-          release_name: $VERSION
-          tag_name: "v${VERSION}"
+          release_name: ${{ env.VERSION }}
+          tag_name: v${{ VERSION }}
           body_path: CHANGELOG.md
           draft: false
           prerelease: true
@@ -50,6 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         with:
           upload_url: ${{ steps.create-pre-release.outputs.upload_url }}
-          asset_path: "SlicerBoneMorphing-${VERSION}.zip"
-          asset_name: "SlicerBoneMorphing-${VERSION}.zip"
+          asset_path: SlicerBoneMorphing-${{ env.VERSION }}.zip
+          asset_name: "SlicerBoneMorphing-${{ env.VERSION }}.zip"
           asset_content_type: application/gzip
