@@ -34,7 +34,7 @@ jobs:
             const response = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: version,
+              tag_name: v0.2.0-rc.2,
               name: version,
               body: `Release version ${version}`,
               draft: false,
