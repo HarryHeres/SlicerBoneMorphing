@@ -37,7 +37,7 @@ jobs:
               repo: context.repo.repo,
               tag_name: `v${version}`,
               name: version,
-              body: body,
+              body: `${body}`,
               draft: false,
               prerelease: true
             });
