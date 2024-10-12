@@ -1,4 +1,3 @@
-#
 name: Create and publish pre-release 
 
 on:
@@ -25,12 +24,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const version = process.env.VERSION;
             const response = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: $VERSION, 
-              name: $VERSION,  
-              body: 'SlicerBoneMorphing version $VERSION',
+              tag_name: version, 
+              name: version,  
+              body: 'SlicerBoneMorphing version ${version}',
               draft: false,    
               prerelease: true 
             });
