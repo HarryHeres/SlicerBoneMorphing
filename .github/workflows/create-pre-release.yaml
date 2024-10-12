@@ -51,9 +51,7 @@ jobs:
               prerelease: true
             });
 
-            return {
-              release_id: response.data.release_id
-            }
+            return  `release_id=${response.data.release_id}`;
 
       - name: Upload ZIP to the release
         uses: actions/github-script@v6
@@ -74,7 +72,6 @@ jobs:
               repo: context.repo.repo,
               release_id: `${release_id}`,
               name: `SlicerBoneMorphing-${version}.zip`
-              data: `@SlicerBoneMorphing-${version}.zip`,
               headers: {
                 'content-type': 'application/zip',
               }
