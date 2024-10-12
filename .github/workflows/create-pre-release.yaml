@@ -71,7 +71,8 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: `${release_id}`,
-              name: `SlicerBoneMorphing-${version}.zip`
+              name: `SlicerBoneMorphing-${version}.zip`,
+              data: `@SlicerBoneMorphing-${version}.zip`,
               headers: {
                 'content-type': 'application/zip',
               }
