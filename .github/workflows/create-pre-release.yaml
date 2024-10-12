@@ -45,8 +45,8 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: `v${version}`,
-              name: version,
-              body: body,
+              name: `v${version}`,
+              body:  `${body}`,
               draft: false,
               prerelease: true
             });
@@ -68,19 +68,12 @@ jobs:
 
             const version = process.env.version;
             const release_id = process.env.release_id;
-            console.log(release_id);
-            const fileName = `SlicerBoneMorphing-${version}.zip`;
-            const assetPath = path.join(process.cwd(), fileName);
-            const fileSize = fs.statSync(assetPath).size;
-            
-            const fileData = fs.readFileSync(assetPath);
 
             await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: `${release_id}`,
-              name: fileName,
-              data: fileData,
+              data: `@SlicerBoneMorphing-${version}.zip`,
               headers: {
                 'content-type': 'application/zip',
                 'content-length': fileSize
