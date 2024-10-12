@@ -1,0 +1,59 @@
+name: Create and publish pre-release 
+
+on: 
+  push:
+    branches:
+      - 'cicd'
+  workflow_dispatch:
+
+jobs:
+  create-pre-release:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse current version
+        id: get-app-version
+        run: echo "VERSION=$(cat SlicerBoneMorphing/SlicerBoneMorphing.py | grep Version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Temporary CHANGELOG update
+        env:
+          VERSION: ${{steps.get-app-version.outputs.version}}
+        run: sed -i "s/\[Unreleased\]/\[${VERSION}\] - $(date +%Y-%m-%d)/" CHANGELOG.md
+
+      - name: Create ZIP archive
+        env:
+          VERSION: ${{steps.get-app-version.outputs.version}}
+        run: |
+          cd SlicerBoneMorphing
+          zip -r SlicerBoneMorphing-$VERSION.zip ./*
+          cp SlicerBoneMorphing-$VERSION.zip ../ 
+          cd ..
+
+      - name: Create pre-release
+        id: create-pre-release
+        uses: actions/create-release@v1
+        env:
+          VERSION: ${{ steps.get-app-version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          release_name: v${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: true
+
+      - name: Upload artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          VERSION: ${{ steps.get-app-version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          upload_url: ${{ steps.create-pre-release.outputs.upload_url }}
+          asset_path: SlicerBoneMorphing-${{ env.VERSION }}.zip
+          asset_name: "SlicerBoneMorphing-${{ env.VERSION }}.zip"
+          asset_content_type: application/gzip
