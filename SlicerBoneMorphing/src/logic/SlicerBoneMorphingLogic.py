@@ -93,7 +93,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         if (options_params[const.OPTIONS_KEY_IMPORT_REGISTRATION_MODEL] is True):
             registration_result = self.__convert_mesh_to_vtk_polydata(source_mesh)
-            registration_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([target_model.GetName(), "rigid_registration_result"]))
+            registration_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode', "_".join([source_model.GetName(), "to", target_model.GetName(), "rigidly_registered"]))
             registration_node.SetAndObservePolyData(registration_result)
             registration_node.CreateDefaultDisplayNodes()
 
@@ -247,7 +247,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             result_ransac = self.__ransac_pcd_registration(
                 source_pcd_downsampled, target_pcd_downsampled,
                 source_pcd_fpfh, target_pcd_fpfh,
-                parameters[const.REGISTRATION_KEY_DISTANCE_THRESHOLD],
+                parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD],
                 parameters[const.REGISTRATION_KEY_FITNESS_THRESHOLD],
                 parameters[const.REGISTRATION_KEY_MAX_ITERATIONS]
             )

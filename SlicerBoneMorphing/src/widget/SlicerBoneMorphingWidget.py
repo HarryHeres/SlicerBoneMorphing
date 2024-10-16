@@ -68,7 +68,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
         ## Registration parameters ##
         self.__ui.registrationMaxIterationsSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_MAX_ITERATIONS
-        self.__ui.registrationDistanceThresholdDoubleSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_DISTANCE_THRESHOLD
+        self.__ui.registrationRANSACDistanceThresholdDoubleSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_DISTANCE_THRESHOLD
         self.__ui.registrationFitnessThresholdDoubleSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_FITNESS_THRESHOLD
         self.__ui.registrationIcpDistanceThresholdDoubleSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_ICP_DISTANCE_THRESHOLD
 
@@ -187,7 +187,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
         # Registration
         params[const.REGISTRATION_KEY_MAX_ITERATIONS] = self.__ui.registrationMaxIterationsSpinBox.value
-        params[const.REGISTRATION_KEY_DISTANCE_THRESHOLD] = self.__ui.registrationDistanceThresholdDoubleSpinBox.value
+        params[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD] = self.__ui.registrationRANSACDistanceThresholdDoubleSpinBox.value
         params[const.REGISTRATION_KEY_FITNESS_THRESHOLD] = self.__ui.registrationFitnessThresholdDoubleSpinBox.value
         params[const.REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD] = self.__ui.registrationIcpDistanceThresholdDoubleSpinBox.value
 
