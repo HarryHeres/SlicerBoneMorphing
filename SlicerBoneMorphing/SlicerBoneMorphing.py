@@ -17,7 +17,7 @@ class SlicerBoneMorphing(ScriptedLoadableModule):
         self.parent.helpText = """
         This module gives a user ability to recreate bone mesh models based on their partial scan.
         Please, start with importing your model and checking out the options on the left side afterwards.
-        Version: 0.2.0-rc.2
+        Version: 0.2.0-rc.3
         """
 
         self.parent.acknowledgementText = """
