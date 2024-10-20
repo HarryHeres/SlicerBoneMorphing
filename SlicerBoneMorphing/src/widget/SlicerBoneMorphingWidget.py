@@ -62,7 +62,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         ## Preprocessing parameters ##
         self.__ui.preprocessingDownsamplingCheckBox.checked = False
         self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked = True
-        self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_VOXEL_SIZE
         self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_NORMAL_SCALE
         self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_MAX_NN_NORMALS
         self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_FEATURE_SCALE
@@ -103,9 +102,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.__ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value = const.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SCALE
         self.__ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value = const.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_RADIUS
         self.__ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value = const.BCPD_DEFAULT_VALUE_ACCELERATION_KD_TREE_SIGMA_THRESHOLD
-
-        ## Downsampling options ##
-        self.__ui.bcpdDownsamplingLineEdit.text = const.BCPD_DEFAULT_VALUE_DOWNSAMPLING_OPTIONS
 
         ## Convergence options ##
         self.__ui.bcpdConvergenceToleranceDoubleSpinBox.value = const.BCPD_DEFAULT_VALUE_CONVERGENCE_TOLERANCE
@@ -185,7 +181,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params[const.PREPROCESSING_KEY_DOWNSAMPLING] = self.__ui.preprocessingDownsamplingCheckBox.checked
         params[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] = self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked
         params[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] = self.__ui.preprocessingDownsamplingTargetToSourceRadioButton.checked
-        params[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE] = self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] = self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_MAX_NN_NORMALS] = self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value
         params[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] = self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value
@@ -275,10 +270,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
                 params[const.BCPD_VALUE_KEY_KD_TREE_SCALE] = self.__ui.bcpdAccelerationManualKdTreeScaleDoubleSpinBox.value
                 params[const.BCPD_VALUE_KEY_KD_TREE_RADIUS] = self.__ui.bcpdAccelerationManualKdTreeRadiusDoubleSpinBox.value
                 params[const.BCPD_VALUE_KEY_KD_TREE_THRESHOLD] = self.__ui.bcpdAccelerationManualKdTreeThresholdDoubleSpinBox.value
-
-        ## Downsampling settings ##
-        if params.get(const.BCPD_VALUE_KEY_DOWNSAMPLING) is None:
-            params[const.BCPD_VALUE_KEY_DOWNSAMPLING] = self.__ui.bcpdDownsamplingLineEdit.text
 
         ## Convergence options ##
         params[const.BCPD_VALUE_KEY_CONVERGENCE_TOLERANCE] = self.__ui.bcpdConvergenceToleranceDoubleSpinBox.value

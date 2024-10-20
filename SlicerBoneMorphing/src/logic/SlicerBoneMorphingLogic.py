@@ -232,6 +232,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             elif parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] is True:
                 voxel_size = np.linalg.norm(np.asarray(source_pcd.get_max_bound()) - np.asarray(source_pcd.get_min_bound()))
 
+        print("Preprocessing source mesh...")
         source_pcd_downsampled, source_pcd_fpfh = self.__preprocess_point_cloud(
             source_pcd,
             voxel_size,
@@ -241,6 +242,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             parameters[const.PREPROCESSING_KEY_MAX_NN_FPFH]
         )
 
+        print("Preprocessing target mesh...")
         target_pcd_downsampled, target_pcd_fpfh = self.__preprocess_point_cloud(
             target_pcd,
             voxel_size,
@@ -302,8 +304,13 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         '''
 
         pcd_voxel_size = np.linalg.norm(np.asarray(pcd.get_max_bound()) - np.asarray(pcd.get_min_bound()))
-        if downsampling_voxel_size > 0.0 and downsampling_voxel_size != pcd_voxel_size:
+        if downsampling_voxel_size > 0.0 and downsampling_voxel_size != pcd_voxel_size and pcd_voxel_size > downsampling_voxel_size:
+            print("Downsampling point cloud with voxel size: " + str(pcd_voxel_size) + " to target voxel size: " + str(downsampling_voxel_size))
             pcd = pcd.voxel_down_sample(downsampling_voxel_size)
+        else:
+            print("Downsampling will not be performed. The target voxel size is either less than 0, equal to the calculated voxel size and/or larger, than current voxel size")
+            print("PCD calculated voxel size: " + str(pcd_voxel_size))
+            print("Target voxel size: " + str(downsampling_voxel_size))
 
         pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))
 
