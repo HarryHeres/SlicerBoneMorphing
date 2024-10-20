@@ -225,9 +225,16 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         source_pcd = self.__convert_mesh_to_point_cloud(source_mesh)
         target_pcd = self.__convert_mesh_to_point_cloud(target_mesh)
 
+        voxel_size = 0.0
+        if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING] is True:
+            if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] is True:
+                voxel_size = np.linalg.norm(np.asarray(target_pcd.get_max_bound()) - np.asarray(target_pcd.get_min_bound()))
+            elif parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] is True:
+                voxel_size = np.linalg.norm(np.asarray(source_pcd.get_max_bound()) - np.asarray(source_pcd.get_min_bound()))
+
         source_pcd_downsampled, source_pcd_fpfh = self.__preprocess_point_cloud(
             source_pcd,
-            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE],
+            voxel_size,
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_MAX_NN_NORMALS],
@@ -236,7 +243,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         target_pcd_downsampled, target_pcd_fpfh = self.__preprocess_point_cloud(
             target_pcd,
-            parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE],
+            voxel_size,
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_MAX_NN_NORMALS],
@@ -294,7 +301,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 - [1] = FPFH
         '''
 
-        if downsampling_voxel_size > 0.0:
+        pcd_voxel_size = np.linalg.norm(np.asarray(pcd.get_max_bound()) - np.asarray(pcd.get_min_bound()))
+        if downsampling_voxel_size > 0.0 and downsampling_voxel_size != pcd_voxel_size:
             pcd = pcd.voxel_down_sample(downsampling_voxel_size)
 
         pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=normals_estimation_radius, max_nn=max_nn_normals))

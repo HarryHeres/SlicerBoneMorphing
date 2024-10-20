@@ -30,6 +30,8 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.__ui.sourceNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
         self.__ui.targetNodeSelectionBox.setMRMLScene(slicer.mrmlScene)
 
+        self.__ui.preprocessingDownsamplingGroupBox.setVisible(False)
+
         self.__ui.bcpdAdvancedControlsGroupBox.setVisible(False)
 
         self.__setup_combo_box(self.__ui.bcpdKernelTypeComboBox, BcpdKernelType, self.__show_kernel_type)
@@ -45,8 +47,6 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
         self.__setup_combo_box(self.__ui.bcpdNormalizationComboBox, BcpdNormalizationOptions, None)
 
-        self.__ui.bcpdDownsamplingCollapsibleGroupBox.visible = False
-
         self.__ui.bcpdResetParametersPushButton.clicked.connect(self.__reset_parameters_to_default)
         self.__ui.generateModelButton.clicked.connect(self.__generate_model)
 
@@ -60,6 +60,8 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         self.__ui.optionsImportRegistrationModelCheckBox.setChecked(False)
 
         ## Preprocessing parameters ##
+        self.__ui.preprocessingDownsamplingCheckBox.checked = False
+        self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked = True
         self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_DOWNSAMPLING_VOXEL_SIZE
         self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_NORMAL_SCALE
         self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_MAX_NN_NORMALS
@@ -179,6 +181,10 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params = {}
 
         # Preprocessing
+
+        params[const.PREPROCESSING_KEY_DOWNSAMPLING] = self.__ui.preprocessingDownsamplingCheckBox.checked
+        params[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] = self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked
+        params[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] = self.__ui.preprocessingDownsamplingTargetToSourceRadioButton.checked
         params[const.PREPROCESSING_KEY_DOWNSAMPLING_VOXEL_SIZE] = self.__ui.preprocessingDownsamplingVoxelSizeDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] = self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value
         params[const.PREPROCESSING_KEY_MAX_NN_NORMALS] = self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value

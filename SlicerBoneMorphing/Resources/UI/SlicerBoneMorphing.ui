@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>UI</class>
  <widget class="qMRMLWidget" name="UI">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +12,9 @@
     <width>638</width>
     <height>1158</height>
    </rect>
+  </property>
+  <property name="toolTip">
+   <string>If checked, the source model will be downsampled to match the target's voxels size</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -167,37 +173,14 @@
          <string>Point cloud preprocessing</string>
         </property>
         <layout class="QFormLayout" name="formLayout_17">
-         <item row="0" column="0">
-          <widget class="QLabel" name="preprocessingDownsamplingDistanceThresholdLabel">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="text">
-            <string>Downsampling voxel size</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="preprocessingDownsamplingVoxelSizeDoubleSpinBox">
-           <property name="toolTip">
-            <string>The higher the number, the lower the distance threshold for the RANSAC registration</string>
-           </property>
-           <property name="maximum">
-            <double>100.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="preprocessingNormalsEstimationRadiusLabel">
            <property name="text">
             <string>Normals estimation radius: </string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingNormalsEstimationRadiusDoubleSpinBox">
            <property name="maximum">
             <double>100.000000000000000</double>
@@ -207,14 +190,14 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="QLabel" name="preprocessingNormalsEstimationMaxNeighboursLabel">
            <property name="text">
             <string>Normals estimation max neighbours:</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
+         <item row="3" column="1">
           <widget class="QSpinBox" name="preprocessingNormalsEstimationMaxNeighboursSpinBox">
            <property name="minimum">
             <number>1</number>
@@ -227,14 +210,14 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="preprocessingFpfhRadiusLabel">
            <property name="text">
             <string>FPFH search radius:</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingFpfhRadiusDoubleSpinBox">
            <property name="maximum">
             <double>100.000000000000000</double>
@@ -244,14 +227,14 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="preprocessingFpfhMaxNeighboursLabel">
            <property name="text">
             <string>FPFH max neighbours:</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="5" column="1">
           <widget class="QSpinBox" name="preprocessingFpfhMaxNeighboursSpinBox">
            <property name="minimum">
             <number>1</number>
@@ -262,6 +245,48 @@
            <property name="value">
             <number>30</number>
            </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="preprocessingDownsamplingCheckBox">
+           <property name="text">
+            <string>Downsampling</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QGroupBox" name="preprocessingDownsamplingGroupBox">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="title">
+            <string>Downsampling options</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="2" column="0">
+             <widget class="QRadioButton" name="preprocessingDownsamplingTargetToSourceRadioButton">
+              <property name="toolTip">
+               <string>If checked, the TARGET will be downsampled to match the SOURCE's voxel size</string>
+              </property>
+              <property name="text">
+               <string>Downsample TARGET to match SOURCE</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QRadioButton" name="preprocessingDownsamplingSourceToTargetRadioButton">
+              <property name="toolTip">
+               <string>If checked, the SOURCE model will be downsampled to match the TARGET's model voxel size</string>
+              </property>
+              <property name="text">
+               <string>Downsample SOURCE to match TARGET</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -1015,47 +1040,6 @@
           </widget>
          </item>
          <item row="2" column="0" colspan="2">
-          <widget class="ctkCollapsibleGroupBox" name="bcpdDownsamplingCollapsibleGroupBox">
-           <property name="toolTip">
-            <string>Note: Downsampling automaticallz activates the deformation vecttor interpolation</string>
-           </property>
-           <property name="title">
-            <string>Downsampling</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-           <property name="collapsed">
-            <bool>true</bool>
-           </property>
-           <layout class="QFormLayout" name="formLayout_11">
-            <item row="0" column="0">
-             <widget class="QLabel" name="bcpdDownsamplingLabel">
-              <property name="toolTip">
-               <string>Downsampling options. For syntax, please check the documentation</string>
-              </property>
-              <property name="text">
-               <string>Options: </string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="bcpdDownsamplingLineEdit">
-              <property name="toolTip">
-               <string>Downsampling options. For syntax, please check the documentation</string>
-              </property>
-              <property name="text">
-               <string>B,5000,0.08</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="3" column="0" colspan="2">
           <widget class="ctkCollapsibleGroupBox" name="bcpdConvergenceCollapsibleGroupBox">
            <property name="title">
             <string>Convergence</string>
@@ -1133,7 +1117,7 @@
            </layout>
           </widget>
          </item>
-         <item row="4" column="0" colspan="2">
+         <item row="3" column="0" colspan="2">
           <widget class="ctkCollapsibleGroupBox" name="bcpdNormalizationCollapsibleGroupBox">
            <property name="title">
             <string>Normalization</string>
@@ -1276,8 +1260,8 @@
      <y>237</y>
     </hint>
     <hint type="destinationlabel">
-     <x>335</x>
-     <y>57</y>
+     <x>403</x>
+     <y>254</y>
     </hint>
    </hints>
   </connection>
@@ -1288,12 +1272,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>114</x>
-     <y>577</y>
+     <x>132</x>
+     <y>1042</y>
     </hint>
     <hint type="destinationlabel">
-     <x>274</x>
-     <y>1065</y>
+     <x>292</x>
+     <y>1045</y>
     </hint>
    </hints>
   </connection>
@@ -1304,12 +1288,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>132</x>
-     <y>847</y>
+     <x>140</x>
+     <y>1082</y>
     </hint>
    </hints>
   </connection>
@@ -1320,12 +1304,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>611</x>
-     <y>847</y>
+     <x>583</x>
+     <y>1091</y>
     </hint>
    </hints>
   </connection>
@@ -1336,12 +1320,12 @@
    <slot>setHidden(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>130</x>
-     <y>878</y>
+     <x>138</x>
+     <y>1078</y>
     </hint>
    </hints>
   </connection>
@@ -1352,12 +1336,12 @@
    <slot>setHidden(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>611</x>
-     <y>878</y>
+     <x>583</x>
+     <y>1078</y>
     </hint>
    </hints>
   </connection>
@@ -1368,12 +1352,12 @@
    <slot>setHidden(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>145</x>
-     <y>910</y>
+     <x>164</x>
+     <y>1075</y>
     </hint>
    </hints>
   </connection>
@@ -1384,28 +1368,12 @@
    <slot>setHidden(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>818</y>
+     <x>186</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
-     <x>611</x>
-     <y>910</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>bcpdAccelerationAutomaticPlusPlusCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>bcpdDownsamplingCollapsibleGroupBox</receiver>
-   <slot>setHidden(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>134</x>
-     <y>1207</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>102</x>
-     <y>1145</y>
+     <x>583</x>
+     <y>1075</y>
     </hint>
    </hints>
   </connection>
@@ -1420,8 +1388,24 @@
      <y>44</y>
     </hint>
     <hint type="destinationlabel">
-     <x>318</x>
-     <y>192</y>
+     <x>336</x>
+     <y>160</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>preprocessingDownsamplingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>preprocessingDownsamplingGroupBox</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>105</x>
+     <y>363</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>409</y>
     </hint>
    </hints>
   </connection>
