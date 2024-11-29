@@ -26,10 +26,10 @@ After a successful installation, the module will be available in the **Morphing*
 ## How to use 
 For guidance on how to use the module, please refer to this [Guide](./docs/how-to-use.md).
 
-## Contributors ❤️
-A huge thank you to all of the contributors! 
+<!-- ## Contributors ❤️ -->
+<!-- A huge thank you to all of the contributors!  -->
 
-<a href="https://github.com/HarryHeres/SlicerBoneMorphing/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HarryHeres/SlicerBoneMorphing" />
-</a>
+<!-- <a href="https://github.com/HarryHeres/SlicerBoneMorphing/graphs/contributors"> -->
+<!--   <img src="https://contrib.rocks/image?repo=HarryHeres/SlicerBoneMorphing" /> -->
+<!-- </a> -->
 
