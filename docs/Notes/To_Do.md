@@ -27,7 +27,7 @@ Jan
 	- could use DeCa for this since the models are already aligned
 - then use that to inform lambda value for deformation 
 	- ie model allowed to deform enough to match proximal surfaces but distal surface can only deform by this amount
-
+_Note_ hopefully this would not cause anisotropic morphing on the distal end, which could cause unrealistic epicondyle shapes. Maybe we can also constrain the distal end to not deform much in morphology 
 
 
 *Other notes from Meeting 29/11/24*
