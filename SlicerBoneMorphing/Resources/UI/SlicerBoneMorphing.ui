@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="toolTip">
-   <string>If checked, the source model will be downsampled to match the target's voxels size</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -175,6 +175,9 @@
         <layout class="QFormLayout" name="formLayout_17">
          <item row="2" column="0">
           <widget class="QLabel" name="preprocessingNormalsEstimationRadiusLabel">
+           <property name="toolTip">
+            <string>Maximum radius for calculating normals. Calculated as multiplier of the object's voxel size</string>
+           </property>
            <property name="text">
             <string>Normals estimation radius: </string>
            </property>
@@ -182,6 +185,12 @@
          </item>
          <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingNormalsEstimationRadiusDoubleSpinBox">
+           <property name="toolTip">
+            <string>Maximum radius for calculating normals. Calculated as multiplier of the object's voxel size</string>
+           </property>
+           <property name="minimum">
+            <double>1.000000000000000</double>
+           </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
@@ -192,6 +201,9 @@
          </item>
          <item row="3" column="0">
           <widget class="QLabel" name="preprocessingNormalsEstimationMaxNeighboursLabel">
+           <property name="toolTip">
+            <string>Maximum amount of points considered neighbouring. Calculated as percentage of the lower count of initial points of the source or target mesh</string>
+           </property>
            <property name="text">
             <string>Normals estimation max neighbours:</string>
            </property>
@@ -199,19 +211,25 @@
          </item>
          <item row="3" column="1">
           <widget class="QSpinBox" name="preprocessingNormalsEstimationMaxNeighboursSpinBox">
+           <property name="toolTip">
+            <string>Maximum amount of points considered neighbouring. Calculated as percentage of the lower count of initial points of the source or target mesh</string>
+           </property>
            <property name="minimum">
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>1000</number>
+            <number>100</number>
            </property>
            <property name="value">
-            <number>100</number>
+            <number>25</number>
            </property>
           </widget>
          </item>
          <item row="4" column="0">
           <widget class="QLabel" name="preprocessingFpfhRadiusLabel">
+           <property name="toolTip">
+            <string>Maximum radius for calculating fast point feature histograms. Calculated as a multiplier of the object's voxel size</string>
+           </property>
            <property name="text">
             <string>FPFH search radius:</string>
            </property>
@@ -219,6 +237,12 @@
          </item>
          <item row="4" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingFpfhRadiusDoubleSpinBox">
+           <property name="toolTip">
+            <string>Maximum radius for calculating fast point feature histograms. Calculated as a multiplier of the object's voxel size</string>
+           </property>
+           <property name="minimum">
+            <double>1.000000000000000</double>
+           </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
@@ -229,21 +253,30 @@
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="preprocessingFpfhMaxNeighboursLabel">
+           <property name="toolTip">
+            <string>Maximum amount of points considered neighbouring. Calculated as percentage of the lower count of initial points of the source or target mesh</string>
+           </property>
            <property name="text">
-            <string>FPFH max neighbours:</string>
+            <string>FPFH max neighbours [%]:</string>
            </property>
           </widget>
          </item>
          <item row="5" column="1">
           <widget class="QSpinBox" name="preprocessingFpfhMaxNeighboursSpinBox">
+           <property name="toolTip">
+            <string>Maximum amount of points considered neighbouring. Calculated as percentage of the lower count of initial points of the source or target mesh</string>
+           </property>
            <property name="minimum">
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>1000</number>
+            <number>100</number>
+           </property>
+           <property name="singleStep">
+            <number>1</number>
            </property>
            <property name="value">
-            <number>30</number>
+            <number>50</number>
            </property>
           </widget>
          </item>
@@ -301,20 +334,32 @@
          <item row="1" column="0">
           <widget class="QLabel" name="registrationRANSACDistanceThresholdLabel">
            <property name="toolTip">
-            <string>Maximum distance in which points are considered neighbouring for the RANSAC algorithm</string>
+            <string>Maximum distance threshold for RANSAC calculted as percentage of the object's size</string>
            </property>
            <property name="text">
-            <string>RANSAC Distance threshold:</string>
+            <string>RANSAC distance threshold [%]:</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
           <widget class="QDoubleSpinBox" name="registrationRANSACDistanceThresholdDoubleSpinBox">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>0.010000000000000</double>
+           </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
-           <property name="value">
+           <property name="singleStep">
             <double>1.000000000000000</double>
+           </property>
+           <property name="stepType">
+            <enum>QAbstractSpinBox::DefaultStepType</enum>
+           </property>
+           <property name="value">
+            <double>2.700000000000000</double>
            </property>
           </widget>
          </item>
@@ -354,7 +399,7 @@
          <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="registrationFitnessThresholdDoubleSpinBox">
            <property name="decimals">
-            <number>8</number>
+            <number>5</number>
            </property>
            <property name="maximum">
             <double>1.000000000000000</double>
@@ -370,20 +415,26 @@
          <item row="3" column="0">
           <widget class="QLabel" name="registrationIcpDistanceThresholdLabel">
            <property name="toolTip">
-            <string>Maximum distance in which points are considered neighbouring for the ICP algorithm</string>
+            <string>Maximum distance threshold for ICP calculted as percentage of the object's size</string>
            </property>
            <property name="text">
-            <string>ICP Distance threshold:</string>
+            <string>ICP distance threshold [%]:</string>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
           <widget class="QDoubleSpinBox" name="registrationIcpDistanceThresholdDoubleSpinBox">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>0.010000000000000</double>
+           </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
            <property name="value">
-            <double>1.000000000000000</double>
+            <double>0.700000000000000</double>
            </property>
           </widget>
          </item>

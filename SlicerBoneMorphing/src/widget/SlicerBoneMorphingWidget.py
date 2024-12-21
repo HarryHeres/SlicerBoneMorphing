@@ -249,15 +249,17 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         ## Acceleration settings ##
         if self.__ui.bcpdAccelerationModeComboBox.currentIndex == BcpdAccelerationMode.AUTOMATIC.value:
             if self.__ui.bcpdAccelerationAutomaticVbiCheckBox.checked is True:
-                params[const.BCPD_VALUE_KEY_NYSTORM_G] = 70
-                params[const.BCPD_VALUE_KEY_NYSTORM_P] = 300
+                params[const.BCPD_VALUE_KEY_NYSTORM_G] = const.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_G
+                params[const.BCPD_VALUE_KEY_NYSTORM_P] = const.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_J
+                params[const.BCPD_VALUE_KEY_NYSTORM_R] = const.BCPD_DEFAULT_VALUE_ACCELERATION_NYSTORM_SAMPLES_R
+
                 # Option switch without a value
                 params[const.BCPD_VALUE_KEY_KD_TREE] = ""
                 params[const.BCPD_VALUE_KEY_KD_TREE_SCALE] = 7
                 params[const.BCPD_VALUE_KEY_KD_TREE_RADIUS] = 0.15
 
             if self.__ui.bcpdAccelerationAutomaticPlusPlusCheckBox.checked is True:
-                params[const.BCPD_VALUE_KEY_DOWNSAMPLING] = "B,10000,0.08"
+                params[const.BCPD_VALUE_KEY_DOWNSAMPLING] = const.BCPD_DEFAULT_VALUE_DOWNSAMPLING_OPTIONS
         else:  # Manual acceleration
             if self.__ui.bcpdAccelerationManualNystormGroupBox.checked is True:
                 params[const.BCPD_VALUE_KEY_NYSTORM_G] = self.__ui.bcpdAccelerationManualNystormGSpinBox.value
