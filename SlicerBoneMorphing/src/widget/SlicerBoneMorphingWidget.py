@@ -202,7 +202,7 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
 
         ## Tuning parameters ##
         params[const.BCPD_VALUE_KEY_OMEGA] = self.__ui.bcpdOmegaDoubleSpinBox.value
-        params[const.BCPD_VALUE_KEY_LAMBDA] = self.__ui.bcpdLambdaDoubleSpinBox.value
+        params[const.BCPD_VALUE_KEY_LAMBDA] = self.__ui.bcpdLambdaDoubleSpinBox.value / 100
         params[const.BCPD_VALUE_KEY_BETA] = self.__ui.bcpdBetaDoubleSpinBox.value
         params[const.BCPD_VALUE_KEY_GAMMA] = self.__ui.bcpdGammaDoubleSpinBox.value
 

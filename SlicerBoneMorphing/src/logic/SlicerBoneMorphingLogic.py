@@ -418,6 +418,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         cmd = f'{BCPD_EXEC} -h -x {target_path} -y {source_path}'
 
         for key in bcpd_parameters.keys():
+            if key == const.BCPD_VALUE_KEY_LAMBDA:
+                bcpd_parameters[key] *= self.__calculate_object_size(source_pcd)
             cmd += f' {key}{bcpd_parameters[key]}'
 
         cmd += f' -o {output_path}'
