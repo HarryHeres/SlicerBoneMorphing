@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG
 - CODEOWNERS
 
+### Improved
+- Improving rigid registration [https://github.com/HarryHeres/SlicerBoneMorphing/issues/27]
+
 ### Changed
 - Naming of the generated model based on the selected target node
 - Updated documentation [https://github.com/HarryHeres/SlicerBoneMorphing/issues/11]
