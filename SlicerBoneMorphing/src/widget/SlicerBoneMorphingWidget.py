@@ -62,10 +62,10 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         ## Preprocessing parameters ##
         self.__ui.preprocessingDownsamplingCheckBox.checked = False
         self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked = True
-        self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_NORMAL_SCALE
-        self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_MAX_NN_NORMALS
-        self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_RADIUS_FEATURE_SCALE
-        self.__ui.preprocessingFpfhMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_MAX_NN_FPFH
+        self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_NORMALS_ESTIMATION_RADIUS
+        self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_NORMALS_MAX_NN
+        self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_FPFPH_ESTIMATION_RADIUS
+        self.__ui.preprocessingFpfhMaxNeighboursSpinBox.value = const.PREPROCESSING_DEFAULT_VALUE_FPFH_MAX_NN
 
         ## Registration parameters ##
         self.__ui.registrationMaxIterationsSpinBox.value = const.REGISTRATION_DEFAULT_VALUE_MAX_ITERATIONS
@@ -182,9 +182,9 @@ class SlicerBoneMorphingWidget(ScriptedLoadableModuleWidget):
         params[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] = self.__ui.preprocessingDownsamplingSourceToTargetRadioButton.checked
         params[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] = self.__ui.preprocessingDownsamplingTargetToSourceRadioButton.checked
         params[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] = self.__ui.preprocessingNormalsEstimationRadiusDoubleSpinBox.value
-        params[const.PREPROCESSING_KEY_MAX_NN_NORMALS] = self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value
+        params[const.PREPROCESSING_KEY_NORMALS_MAX_NN] = self.__ui.preprocessingNormalsEstimationMaxNeighboursSpinBox.value
         params[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] = self.__ui.preprocessingFpfhRadiusDoubleSpinBox.value
-        params[const.PREPROCESSING_KEY_MAX_NN_FPFH] = self.__ui.preprocessingFpfhMaxNeighboursSpinBox.value
+        params[const.PREPROCESSING_KEY_FPFH_MAX_NN] = self.__ui.preprocessingFpfhMaxNeighboursSpinBox.value
 
         # Registration
         params[const.REGISTRATION_KEY_MAX_ITERATIONS] = self.__ui.registrationMaxIterationsSpinBox.value

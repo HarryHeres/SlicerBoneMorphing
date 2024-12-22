@@ -176,26 +176,29 @@
          <item row="2" column="0">
           <widget class="QLabel" name="preprocessingNormalsEstimationRadiusLabel">
            <property name="toolTip">
-            <string>Maximum radius for calculating normals. Calculated as multiplier of the object's voxel size</string>
+            <string>Maximum radius for calculating normals. Calculated as percentage of the object's size</string>
            </property>
            <property name="text">
-            <string>Normals estimation radius: </string>
+            <string>Normals estimation radius [%]: </string>
            </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingNormalsEstimationRadiusDoubleSpinBox">
            <property name="toolTip">
-            <string>Maximum radius for calculating normals. Calculated as multiplier of the object's voxel size</string>
+            <string>Maximum radius for calculating normals. Calculated as percentage of the object's size</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
            </property>
            <property name="minimum">
-            <double>1.000000000000000</double>
+            <double>0.001000000000000</double>
            </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
            <property name="value">
-            <double>4.000000000000000</double>
+            <double>8.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -205,7 +208,7 @@
             <string>Maximum amount of points considered neighbouring. Calculated as percentage of the lower count of initial points of the source or target mesh</string>
            </property>
            <property name="text">
-            <string>Normals estimation max neighbours:</string>
+            <string>Normals estimation max neighbours [%]:</string>
            </property>
           </widget>
          </item>
@@ -228,26 +231,29 @@
          <item row="4" column="0">
           <widget class="QLabel" name="preprocessingFpfhRadiusLabel">
            <property name="toolTip">
-            <string>Maximum radius for calculating fast point feature histograms. Calculated as a multiplier of the object's voxel size</string>
+            <string>Maximum radius for calculating fast-point-feature histograms. Calculated as percentage of the object's size</string>
            </property>
            <property name="text">
-            <string>FPFH search radius:</string>
+            <string>FPFH search radius [%]:</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
           <widget class="QDoubleSpinBox" name="preprocessingFpfhRadiusDoubleSpinBox">
            <property name="toolTip">
-            <string>Maximum radius for calculating fast point feature histograms. Calculated as a multiplier of the object's voxel size</string>
+            <string>Maximum radius for calculating fast-point-feature histograms. Calculated as percentage of the object's size</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
            </property>
            <property name="minimum">
-            <double>1.000000000000000</double>
+            <double>0.001000000000000</double>
            </property>
            <property name="maximum">
             <double>100.000000000000000</double>
            </property>
            <property name="value">
-            <double>10.000000000000000</double>
+            <double>20.000000000000000</double>
            </property>
           </widget>
          </item>

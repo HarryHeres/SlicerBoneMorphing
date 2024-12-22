@@ -224,15 +224,15 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         target_pcd = self.__convert_mesh_to_point_cloud(target_mesh)
 
         points_min = np.min([len(source_pcd.points), len(target_pcd.points)])
-        max_nn_normals = int(points_min * (parameters[const.PREPROCESSING_KEY_MAX_NN_NORMALS] / 100))
-        max_nn_fpfh = int(points_min * (parameters[const.PREPROCESSING_KEY_MAX_NN_FPFH] / 100))
+        max_nn_normals = int(points_min * (parameters[const.PREPROCESSING_KEY_NORMALS_MAX_NN] / 100))
+        max_nn_fpfh = int(points_min * (parameters[const.PREPROCESSING_KEY_FPFH_MAX_NN] / 100))
 
-        voxel_size = 0.0
+        object_size = 0.0
         if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING] is True:
             if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] is True:
-                voxel_size = self.__calculate_object_size(target_pcd)
+                object_size = self.__calculate_object_size(target_pcd)
             elif parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] is True:
-                voxel_size = self.__calculate_object_size(source_pcd)
+                object_size = self.__calculate_object_size(source_pcd)
             else:
                 print("ERROR: Downsampling is enabled but neither of the downsampling options was selected")
                 return [const.EXIT_FAILURE, None]
@@ -240,7 +240,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         print("Preprocessing source mesh...")
         source_pcd_downsampled, source_pcd_fpfh = self.__preprocess_point_cloud(
             source_pcd,
-            voxel_size,
+            object_size,
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             max_nn_normals,
@@ -250,21 +250,20 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         print("Preprocessing target mesh...")
         target_pcd_downsampled, target_pcd_fpfh = self.__preprocess_point_cloud(
             target_pcd,
-            voxel_size,
+            object_size,
             parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
             parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
             max_nn_normals,
             max_nn_fpfh
         )
 
-        voxel_size = np.max([self.__calculate_object_size(source_pcd), self.__calculate_object_size(target_pcd)])
-        print("Calculated voxel size: " + str(voxel_size))
+        object_size = np.max([self.__calculate_object_size(source_pcd), self.__calculate_object_size(target_pcd)])
 
         try:
             result_ransac = self.__ransac_pcd_registration(
                 source_pcd_downsampled, target_pcd_downsampled,
                 source_pcd_fpfh, target_pcd_fpfh,
-                voxel_size * (parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD] / 100),
+                object_size * (parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD] / 100),
                 parameters[const.REGISTRATION_KEY_FITNESS_THRESHOLD],
                 parameters[const.REGISTRATION_KEY_MAX_ITERATIONS]
             )
@@ -276,7 +275,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         result_icp = o3d.pipelines.registration.registration_icp(
             source_pcd_downsampled, target_pcd_downsampled,
-            voxel_size * (parameters[const.REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD] / 100),
+            object_size * (parameters[const.REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD] / 100),
             result_ransac.transformation,
             o3d.pipelines.registration.TransformationEstimationPointToPlane()
         )
@@ -302,7 +301,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
     def __preprocess_point_cloud(
             self,
             pcd: o3d.geometry.PointCloud,
-            downsampling_voxel_size: float,
+            downsampling_object_size: float,
             normals_estimation_radius: float,
             fpfh_estimation_radius: float,
             max_nn_normals: int,
@@ -313,8 +312,8 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
             Parameters
             ----------
-            o3d.geometry.PointCloud pcd: Source point cloud
-            float downsampling_distance_threshold: Distance threshold for downsampling
+            o3d.geometry.PointCloud pcd: Point cloud to preprocess
+            float downsampling_object_size: Size of the object to downsample to
             float normals_estimation_radius: Radius for estimating normals
             float fpfh_estimation_radius: Radius for the FPFH computation
             int max_nn_normals: Maximum number of neighbours considered for normals estimation
@@ -327,15 +326,15 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
                 - [1] = FPFH
         '''
 
-        pcd_voxel_size = self.__calculate_object_size(pcd)
-        if downsampling_voxel_size > 0.0 and downsampling_voxel_size != pcd_voxel_size and pcd_voxel_size > downsampling_voxel_size:
-            print("Downsampling point cloud with voxel size: " + str(pcd_voxel_size) + " to target voxel size: " + str(downsampling_voxel_size))
-            pcd = pcd.voxel_down_sample(downsampling_voxel_size)
+        pcd_object_size = self.__calculate_object_size(pcd)
+        if downsampling_object_size > 0.0 and downsampling_object_size != pcd_object_size and pcd_object_size > downsampling_object_size:
+            print("Downsampling point cloud with size: " + str(pcd_object_size) + " to target object size: " + str(downsampling_object_size))
+            pcd = pcd.object_down_sample(downsampling_object_size)
         else:
             print("Downsampling will not be performed. The target voxel size is either less than 0, equal to the calculated voxel size and/or larger, than current voxel size")
 
-        pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=(pcd_voxel_size * normals_estimation_radius), max_nn=max_nn_normals))
-        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=pcd_voxel_size * fpfh_estimation_radius, max_nn=max_nn_fpfh))
+        pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=(pcd_object_size * (normals_estimation_radius / 100)), max_nn=max_nn_normals))
+        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=pcd_object_size * (fpfh_estimation_radius / 100), max_nn=max_nn_fpfh))
         return pcd, pcd_fpfh
 
     def __ransac_pcd_registration(
