@@ -1,3 +1,52 @@
+#### Summary
+
+- Eva showed examples alignment from Arthur's SSM analysis
+	- we discussed rotational offset likely due to proximal alignment not being as good as whole bone alignment
+		- Dave Ackland said if he remembers correctly in Huang et al SSM model, they did the partial reconstruction after aligning
+			- so makes sense their method is a bit better (max error 35mm for distal humerus (point V), I did rough measure in Blender and found max error about 45mm)
+			- still similar errors
+		- advantage our method: more realistic case doing alignment with partial mesh ownly
+- discussed combining SSM with deformation of proximal region to match known morphology of target as closely as possible
+	- to deal with pathological subjects
+	- for exact idea how to do this, see notes on To Do
+	
+- Arthur showed own dataset mice skulls comparing approaches gd and bcpd
+	- bcpd probabilistic
+	- gd less probabilistic
+	- bcpd seems to perform better on outliers
+	- want to test bgpd on our humerus dataset
+	-![[Pasted image 20250429180002.png]]
+- discussed open3d versions
+	- probably I had old version installed when running Slicer which caused RANSAC issues whereas jupyter notebook with morphing env did not have issues
+		- Eva can do some more tests 
+			- note Arthur SSM reconstructions all had good alignment but maybe because pre aligned for DeCa
+- note DeCa alignment had a rotational offset in bone F_RH_161 - check this
+
+![[Pasted image 20250429190156.png]]
+
+
+### TO DO
+
+#### Eva
+- [ ] send Jan an example of SSM reconstructed mesh for testing subsequent deformation
+- [ ] send upsampling algorithm to Jan
+	- goal to add as initial step to make partial target match 1/3 of mean mesh size
+		- should also upsample mean mesh in case low res? could add that in too
+- [ ] add leave one out to SSM code
+- [ ] test SSM using non pre aligned meshes
+- [ ] add landmarks to bone modelsnew repository open source
+	- [ ] for both pathological and healthy
+	- [ ] then we can add them to the SSM 
+		- [ ] landmarks used for DeCa which is then used for sampling points for SSM
+- [ ] check out weird deca alignment bone 
+#### Jan
+- [ ] add upsampling once Eva sends code
+- [ ] test adding deformation only to specified region of statistical shape reconstructed model
+	- [ ] idea to take bounding box of target (the 1/3 proximal humerus), grow by X amount (in case reconstructed a bit bigger than target in humeral head region)
+
+#### Arthur
+- [ ] send bcpd SSM method to us
+- [ ] send tiny3d to Jan
 ### TO DO and Meeting Summary January '25
 #### Summary
 - Arthur successfully implemented SSM pipeline 
