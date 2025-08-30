@@ -15,14 +15,14 @@
 	- gd less probabilistic
 	- bcpd seems to perform better on outliers
 	- want to test bgpd on our humerus dataset
-	-![[Pasted image 20250429180002.png]]
+	- ![BCPD vs GD comparison](Pasted%20image%2020250429180002.png)
 - discussed open3d versions
 	- probably I had old version installed when running Slicer which caused RANSAC issues whereas jupyter notebook with morphing env did not have issues
 		- Eva can do some more tests 
 			- note Arthur SSM reconstructions all had good alignment but maybe because pre aligned for DeCa
 - note DeCa alignment had a rotational offset in bone F_RH_161 - check this
 
-![[Pasted image 20250429190156.png]]
+![Meeting discussion results](Pasted%20image%2020250429190156.png)
 
 
 ### TO DO
