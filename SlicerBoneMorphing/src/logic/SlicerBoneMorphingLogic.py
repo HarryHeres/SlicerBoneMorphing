@@ -19,16 +19,20 @@ try:
 except ModuleNotFoundError:
     print("Module Open3D not found")
     if su.confirmOkCancelDisplay(text="This module requires the 'open3d' Python package. Click OK to install it now.") is True:
-        if (platform == 'darwin'):
-            # Must be pin-pointed directly due to defaulting to the 'universal' wheel, which does not work under Rosetta
-            # Submitted at https://github.com/isl-org/Open3D/issues/6994
-            su.pip_install('https://github.com/isl-org/Open3D/releases/download/v0.18.0/open3d-0.18.0-cp39-cp39-macosx_11_0_x86_64.whl')
-        else:
-            su.pip_install('open3d')
+        # Note: The Open3D version is locked as we want to have reproducible results
 
+        # Must be pin-pointed directly due to defaulting to the 'universal' wheel, which does not work under Rosetta
+        # Submitted at https://github.com/isl-org/Open3D/issues/6994
+        # su.pip_install('https://github.com/isl-org/Open3D/releases/download/v0.18.0/open3d-0.18.0-cp39-cp39-macosx_11_0_x86_64.whl')
+        # Update 09/2025: Version 0.19 seems to be working without this workaround
+        # if (platform == 'darwin'):
+        # su.pip_install('open3d==0.19.0')
+        # else:
+
+        su.pip_install('open3d==0.19.0')
         import open3d as o3d
     else:
-        print("Open3D is not installed, but is required")
+        print("Open3D is not installed, but is required for this add-on to work")
 
 
 # NOTE: Path is relative to the main module class
