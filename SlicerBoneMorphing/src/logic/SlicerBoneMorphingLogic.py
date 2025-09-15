@@ -19,21 +19,18 @@ try:
 except ModuleNotFoundError:
     print("Module Open3D not found")
     if su.confirmOkCancelDisplay(text="This module requires the 'open3d' Python package. Click OK to install it now.") is True:
-        # Note: The Open3D version is locked as we want to have reproducible results
-
-        # Must be pin-pointed directly due to defaulting to the 'universal' wheel, which does not work under Rosetta
-        # Submitted at https://github.com/isl-org/Open3D/issues/6994
-        # su.pip_install('https://github.com/isl-org/Open3D/releases/download/v0.18.0/open3d-0.18.0-cp39-cp39-macosx_11_0_x86_64.whl')
-        # Update 09/2025: Version 0.19 seems to be working without this workaround
+        # Note: With version 0.19.0, the issue for macOS seems to be fixed
         # if (platform == 'darwin'):
-        # su.pip_install('open3d==0.19.0')
+        #     # Must be pin-pointed directly due to defaulting to the 'universal' wheel, which does not work under Rosetta
+        #     # Submitted at https://github.com/isl-org/Open3D/issues/6994
+        #     su.pip_install('https://github.com/isl-org/Open3D/releases/download/v0.18.0/open3d-0.18.0-cp39-cp39-macosx_11_0_x86_64.whl')
         # else:
+        #     su.pip_install('open3d==0.19.0')
 
         su.pip_install('open3d==0.19.0')
         import open3d as o3d
     else:
-        print("Open3D is not installed, but is required for this add-on to work")
-
+        print("Open3D is not installed, but is required")
 
 # NOTE: Path is relative to the main module class
 BCPD_EXEC = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/exec/"
@@ -41,7 +38,7 @@ BCPD_EXEC = os.path.dirname(os.path.abspath(__file__)) + "/../../Resources/BCPD/
 if platform == "linux" or platform == "linux2":
     BCPD_EXEC += "bcpd_linux_x86_64"
 elif platform == "darwin":
-    BCPD_EXEC += "bcpd_macos_x86_64"  # Slicer is running through Rosetta, so x86 version needs to be used for now
+    BCPD_EXEC += "bcpd_macos_x86_64"  # Slicer is running through Rosetta, so x86 version until Slicer has native ARM build
 elif platform == "win32":
     BCPD_EXEC += "bcpd_win32.exe"
 
@@ -87,12 +84,12 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         source_mesh = self.__convert_model_to_mesh(source_model)
         target_mesh = self.__convert_model_to_mesh(target_model)
 
-        err, result_icp = self.__preprocess_model(source_mesh, target_mesh, parameters[const.PREPROCESSING_KEY])
+        err, registration_result = self.__calculate_rigid_registration(source_mesh, target_mesh, parameters[const.PREPROCESSING_KEY])
         if err == const.EXIT_FAILURE:
             print("Cannot continue to reconstruction. Aborting...")
             return const.EXIT_FAILURE, None
 
-        source_mesh.transform(result_icp.transformation)
+        source_mesh.transform(registration_result.transformation)
         options_params = parameters[const.OPTIONS_KEY]
 
         if (options_params[const.OPTIONS_KEY_IMPORT_REGISTRATION_MODEL] is True):
@@ -205,7 +202,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
 
         return pcd
 
-    def __preprocess_model(
+    def __calculate_rigid_registration(
             self,
             source_mesh: o3d.geometry.TriangleMesh,
             target_mesh: o3d.geometry.TriangleMesh,
@@ -227,49 +224,61 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         source_pcd = self.__convert_mesh_to_point_cloud(source_mesh)
         target_pcd = self.__convert_mesh_to_point_cloud(target_mesh)
 
-        points_min = np.min([len(source_pcd.points), len(target_pcd.points)])
-        max_nn_normals = int(points_min * (parameters[const.PREPROCESSING_KEY_NORMALS_MAX_NN] / 100))
-        max_nn_fpfh = int(points_min * (parameters[const.PREPROCESSING_KEY_FPFH_MAX_NN] / 100))
+        source_pcd_resolution = len(source_pcd.points)
+        target_pcd_resolution = len(target_pcd.points)
 
-        object_size = 0.0
-        if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING] is True:
-            if parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_SOURCE_TO_TARGET] is True:
-                object_size = self.__calculate_object_size(target_pcd)
-            elif parameters[const.PREPROCESSING_KEY_DOWNSAMPLING_TARGET_TO_SOURCE] is True:
-                object_size = self.__calculate_object_size(source_pcd)
-            else:
-                print("ERROR: Downsampling is enabled but neither of the downsampling options was selected")
-                return [const.EXIT_FAILURE, None]
+        res_diff = source_pcd_resolution - target_pcd_resolution / 3
+        res_delta = 1000  # TODO: Optimize this value
 
-        print("Preprocessing source mesh...")
-        source_pcd_downsampled, source_pcd_fpfh = self.__preprocess_point_cloud(
-            source_pcd,
-            object_size,
-            parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
-            parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
-            max_nn_normals,
-            max_nn_fpfh
-        )
+        if (res_diff > res_delta):
+            print(f'Target mesh is undersampled ({target_pcd_resolution}) compared to the source ({source_pcd_resolution}). Upsampling...')
+            slicer.app.processEvents()
+            target_mesh.compute_vertex_normals()
+            target_pcd = target_mesh.sample_points_poisson_disk(number_of_points=source_pcd_resolution)
+        elif (res_diff < -res_delta):
+            print(f'Source mesh is undersampled ({source_pcd_resolution}) compared to the target ({target_pcd_resolution}). Upsampling... ')
+            slicer.app.processEvents()
+            source_mesh.compute_vertex_normals()
+            source_pcd = source_mesh.sample_points_poisson_disk(number_of_points=target_pcd_resolution)
 
-        print("Preprocessing target mesh...")
-        target_pcd_downsampled, target_pcd_fpfh = self.__preprocess_point_cloud(
-            target_pcd,
-            object_size,
-            parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS],
-            parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS],
-            max_nn_normals,
-            max_nn_fpfh
-        )
+        slicer.app.processEvents()
 
-        object_size = np.max([self.__calculate_object_size(source_pcd), self.__calculate_object_size(target_pcd)])
+        print('Cropping target mesh to the proximal area...')
+        cropped_target_pcd = self.__convert_mesh_to_point_cloud(self.__crop_mesh_to_proximal(target_mesh))
+
+        # Voxel size is to be around 2% of the object size
+        # It should not matter whether we calculate voxel size from the source or the cropped target as both of these objects should be fairly similar in size
+        voxel_size = self.__calculate_object_size(source_pcd) / 55
+
+        max_nn_normals = int(source_pcd_resolution * (parameters[const.PREPROCESSING_KEY_NORMALS_MAX_NN] / 100))
+        max_nn_fpfh = int(source_pcd_resolution * (parameters[const.PREPROCESSING_KEY_FPFH_MAX_NN] / 100))
+
+        source_pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=(voxel_size * (parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] / 100)), max_nn=max_nn_normals))
+        source_fpfh = o3d.pipelines.registration.compute_fpfh_feature(source_pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * (parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] / 100), max_nn=max_nn_fpfh))
+
+        cropped_target_pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=(voxel_size * (parameters[const.PREPROCESSING_KEY_NORMALS_ESTIMATION_RADIUS] / 100)), max_nn=max_nn_normals))
+        cropped_target_fpfh = o3d.pipelines.registration.compute_fpfh_feature(cropped_target_pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * (parameters[const.PREPROCESSING_KEY_FPFH_ESTIMATION_RADIUS] / 100), max_nn=max_nn_fpfh))
+
+        object_size = np.max([self.__calculate_object_size(source_pcd), self.__calculate_object_size(cropped_target_pcd)])
 
         try:
-            result_ransac = self.__ransac_pcd_registration(
-                source_pcd_downsampled, target_pcd_downsampled,
-                source_pcd_fpfh, target_pcd_fpfh,
-                object_size * (parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD] / 100),
-                parameters[const.REGISTRATION_KEY_FITNESS_THRESHOLD],
-                parameters[const.REGISTRATION_KEY_MAX_ITERATIONS]
+            result_ransac = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+                source_pcd,
+                cropped_target_pcd,
+                source_fpfh,
+                cropped_target_fpfh,
+                True,
+                parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD],
+                o3d.pipelines.registration.
+                TransformationEstimationPointToPoint(True),
+                3,
+                [
+                    o3d.pipelines.registration.
+                    CorrespondenceCheckerBasedOnEdgeLength(0.9),
+                    o3d.pipelines.registration.
+                    CorrespondenceCheckerBasedOnDistance(parameters[const.REGISTRATION_KEY_RANSAC_DISTANCE_THRESHOLD])
+                ],
+                o3d.pipelines.registration.RANSACConvergenceCriteria(max_iteration=parameters[const.REGISTRATION_KEY_MAX_ITERATIONS], confidence=const.REGISTRATION_DEFAULT_VALUE_RANSAC_CONVERGENCE_CONFIDENCE)
             )
             if result_ransac is None:
                 raise RuntimeError
@@ -278,7 +287,7 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             return const.EXIT_FAILURE, None
 
         result_icp = o3d.pipelines.registration.registration_icp(
-            source_pcd_downsampled, target_pcd_downsampled,
+            source_pcd, target_pcd,
             object_size * (parameters[const.REGISTRATION_KEY_ICP_DISTANCE_THRESHOLD] / 100),
             result_ransac.transformation,
             o3d.pipelines.registration.TransformationEstimationPointToPlane()
@@ -302,44 +311,42 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
         bounding_box = source.get_minimal_oriented_bounding_box(robust=False)
         return np.linalg.norm(np.asarray(bounding_box.get_max_bound()) - np.asarray(bounding_box.get_min_bound()))
 
-    def __preprocess_point_cloud(
-            self,
-            pcd: o3d.geometry.PointCloud,
-            downsampling_object_size: float,
-            normals_estimation_radius: float,
-            fpfh_estimation_radius: float,
-            max_nn_normals: int,
-            max_nn_fpfh: int
-    ) -> Tuple[o3d.geometry.PointCloud, o3d.pipelines.registration.Feature]:
-        '''
-            Perform downsampling of a mesh, normal estimation and computing FPFH feature of the point cloud.
+    def upsample_pcd(self, pcd: o3d.geometry.PointCloud, target_res: int) -> o3d.geometry.TriangleMesh:
+        pcd = pcd.uniform_down_sample(every_k_points=1)  # keep all
+        pcd = pcd.farthest_point_down_sample(target_res)  # sample to ~50k points
 
-            Parameters
-            ----------
-            o3d.geometry.PointCloud pcd: Point cloud to preprocess
-            float downsampling_object_size: Size of the object to downsample to
-            float normals_estimation_radius: Radius for estimating normals
-            float fpfh_estimation_radius: Radius for the FPFH computation
-            int max_nn_normals: Maximum number of neighbours considered for normals estimation
-            int max_nn_fpfh: Maximum number of neighbours considered for the FPFH calculation
+    def __crop_mesh_to_proximal(self, mesh: o3d.geometry.TriangleMesh) -> o3d.geometry.TriangleMesh:
+        """
+        Crop the mesh in 1/3 of its overall size. The cropped mesh is "closed" at the cropping plane to not have any irregular edges
 
-            Returns
-            -------
-            Tuple: [open3d.geometry.PointCloud, open3d.pipelines.registration.Feature]
-                - [0] = downsampled PCD
-                - [1] = FPFH
-        '''
+        Parameters
+        ----------
+        o3d.geometry.TriangleMesh mesh to be cropped
+        """
 
-        pcd_object_size = self.__calculate_object_size(pcd)
-        if downsampling_object_size > 0.0 and downsampling_object_size != pcd_object_size and pcd_object_size > downsampling_object_size:
-            print("Downsampling point cloud with size: " + str(pcd_object_size) + " to target object size: " + str(downsampling_object_size))
-            pcd = pcd.object_down_sample(downsampling_object_size)
-        else:
-            print("Downsampling will not be performed. The target voxel size is either less than 0, equal to the calculated voxel size and/or larger, than current voxel size")
+        obb = mesh.get_oriented_bounding_box()
 
-        pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=(pcd_object_size * (normals_estimation_radius / 100)), max_nn=max_nn_normals))
-        pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd, o3d.geometry.KDTreeSearchParamHybrid(radius=pcd_object_size * (fpfh_estimation_radius / 100), max_nn=max_nn_fpfh))
-        return pcd, pcd_fpfh
+        extents = np.asarray(obb.extent)
+        major_axis_index = np.argmax(extents)
+        major_axis_extent = extents[major_axis_index]
+
+        cropped_extent = extents.copy()
+        cropped_extent[major_axis_index] /= 3
+
+        cropped_center = obb.center + obb.R[:, major_axis_index] * (major_axis_extent / 3)
+
+        cropped_obb = o3d.geometry.OrientedBoundingBox(cropped_center, obb.R, cropped_extent)
+        proximal_mesh = mesh.crop(cropped_obb)
+
+        pcd2 = o3d.geometry.PointCloud()
+        pcd2.points = proximal_mesh.vertices
+        pcd2.colors = proximal_mesh.vertex_colors
+        pcd2.normals = proximal_mesh.vertex_normals
+
+        # TODO: Check out how different is this reconstructed mesh compared to the original, i.e. if we're still representing the models well enough
+        proximal_mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=pcd2, depth=6, width=1, linear_fit=False)[0]
+        proximal_mesh.compute_vertex_normals()
+        return proximal_mesh
 
     def __ransac_pcd_registration(
         self,
@@ -368,24 +375,6 @@ class SlicerBoneMorphingLogic(ScriptedLoadableModuleLogic):
             RANSAC registration result
 
         '''
-        result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
-            source_pcd_down,
-            target_pcd_down,
-            source_fpfh,
-            target_fpfh,
-            True,
-            distance_threshold,
-            o3d.pipelines.registration.
-            TransformationEstimationPointToPoint(True),
-            3,
-            [
-                o3d.pipelines.registration.
-                CorrespondenceCheckerBasedOnEdgeLength(0.9),
-                o3d.pipelines.registration.
-                CorrespondenceCheckerBasedOnDistance(distance_threshold)
-            ],
-            o3d.pipelines.registration.RANSACConvergenceCriteria(max_iteration=max_iterations, confidence=const.REGISTRATION_DEFAULT_VALUE_RANSAC_CONVERGENCE_CONFIDENCE)
-        )
 
         return result
 
